@@ -1,5 +1,6 @@
 from dateutil.parser import parse
 import datetime
+import sys
 from beancount.ingest import importer
 from beancount.core import data, amount
 from beancount.core.number import D
@@ -65,7 +66,8 @@ class Importer(importer.ImporterProtocol):
                         begin = False
                     elif begin:
                         # Is it a date line?
-                        if re.match('[0-9]+-[0-9]+-[0-9]+\n[0-9]+-[0-9]+-[0-9]+\n[0-9]+', content, re.MULTILINE):
+                        # card number can be empty
+                        if re.match('[0-9]+-[0-9]+-[0-9]+\n[0-9]+-[0-9]+-[0-9]+(\n[0-9]+)?', content, re.MULTILINE):
                             date = parse(content.split('\n')[0]).date()
                             description = ""
                         else:
