@@ -1,7 +1,5 @@
-import datetime
 from dateutil.parser import parse
 from beancount.ingest import importer
-from beancount.ingest.extract import DUPLICATE_META
 from beancount.core import data, amount
 from beancount.core.number import D
 import csv
@@ -74,16 +72,6 @@ class Importer(importer.ImporterProtocol):
                             payee = payee[2:]
                     elif "亲属卡交易" == row[1]:
                         account2 = "Expenses:Family"
-                        # We don't know the actual transaction, so default deduplication won't work.
-                        for entry in data.filter_txns(
-                                data.iter_entry_dates(existing_entries,
-                                                      date,
-                                                      date + datetime.timedelta(days=1))):
-                            # Dedup if account & units match
-                            if entry.postings[0].units == -units and \
-                                entry.postings[0].account == account1 and \
-                                    ("财付通" in entry.narration or "微信支付" in entry.narration):
-                                metadata[DUPLICATE_META] = True
                     elif "亲属卡交易-退款" == row[1]:
                         narration = "亲属卡-退款"
                         account2 = "Expenses:Family"

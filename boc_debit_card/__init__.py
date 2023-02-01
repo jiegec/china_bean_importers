@@ -5,7 +5,6 @@ from beancount.core.number import D
 import re
 from china_bean_importers.secret import *
 from china_bean_importers.common import *
-import fitz
 
 
 def gen_txn(file, parts, lineno, card_number, flag, real_name):
@@ -29,6 +28,8 @@ def gen_txn(file, parts, lineno, card_number, flag, real_name):
     account2 = "Expenses:Unknown"
     for key in expenses:
         if key in narration:
+            account2 = expenses[key]
+        elif key in payee:
             account2 = expenses[key]
 
     # Handle transfer to credit/debit cards
