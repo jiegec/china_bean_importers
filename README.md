@@ -23,7 +23,7 @@ git submodule add git@github.com:jiegec/china_bean_importers.git
 pip3 install -r requirements.txt
 ```
 
-从模板 `secret.example.py` 并编辑 secret.py。目前只考虑了中行银行卡。
+从模板 `secret.example.py` 复制并编辑 secret.py。目前只考虑了中行银行卡。
 
 最后，在导入脚本中加入：
 
