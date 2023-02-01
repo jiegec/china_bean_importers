@@ -1,10 +1,7 @@
 from dateutil.parser import parse
-import datetime
-import sys
 from beancount.ingest import importer
 from beancount.core import data, amount
 from beancount.core.number import D
-import csv
 import re
 from china_bean_importers.secret import *
 import fitz
@@ -48,6 +45,34 @@ class Importer(importer.ImporterProtocol):
     def file_account(self, file):
         return "boc_debit_card"
 
+    def file_date(self, file):
+        doc = fitz.open(file.name)
+        if doc.is_encrypted:
+            for password in pdf_passwords:
+                doc.authenticate(password)
+        page = doc[0]
+        text = page.get_text("blocks")
+        for (x0, y0, x1, y1, content, block_no, block_type) in text:
+            match = re.match(
+                '交易区间： ([0-9]+-[0-9]+-[0-9]+) 至 ([0-9]+-[0-9]+-[0-9]+)', content)
+            if match:
+                return parse(match[1])
+        return super().file_date(file)
+
+    def file_name(self, file):
+        doc = fitz.open(file.name)
+        if doc.is_encrypted:
+            for password in pdf_passwords:
+                doc.authenticate(password)
+        page = doc[0]
+        text = page.get_text("blocks")
+        for (x0, y0, x1, y1, content, block_no, block_type) in text:
+            match = re.match(
+                '交易区间： ([0-9]+-[0-9]+-[0-9]+) 至 ([0-9]+-[0-9]+-[0-9]+)', content)
+            if match:
+                return match[2] + ".pdf"
+        return super().file_name(file)
+
     def extract(self, file, existing_entries=None):
         entries = []
         doc = fitz.open(file.name)
@@ -63,7 +88,8 @@ class Importer(importer.ImporterProtocol):
             text = page.get_text("words")
             last_y0 = 0
             # y position of columns
-            columns = [46, 112, 172, 234, 300, 339, 405, 447, 518, 590, 660, 740]
+            columns = [46, 112, 172, 234, 300,
+                       339, 405, 447, 518, 590, 660, 740]
             for (x0, y0, x1, y1, content, block_no, line_no, word_no) in text:
                 # print(x0, y0, x1, y1, repr(content), block_no, line_no, word_no)
                 lineno += 1
@@ -83,10 +109,10 @@ class Importer(importer.ImporterProtocol):
                             # a new entry
                             if len(parts) > 0:
                                 txn = gen_txn(file, parts, lineno,
-                                            card_number, self.FLAG)
+                                              card_number, self.FLAG)
                                 entries.append(txn)
                                 parts = []
-                            
+
                             # date
                             parts.append(content)
                         else:
@@ -101,11 +127,10 @@ class Importer(importer.ImporterProtocol):
                                 else:
                                     # newline
                                     parts[-1] = parts[-1] + content
-                        last_x0 = x0
                         last_y0 = y0
             if len(parts) > 0:
                 txn = gen_txn(file, parts, lineno,
-                            card_number, self.FLAG)
+                              card_number, self.FLAG)
                 entries.append(txn)
                 parts = []
         return entries

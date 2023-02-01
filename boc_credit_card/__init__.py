@@ -9,6 +9,7 @@ import re
 from china_bean_importers.secret import *
 import fitz
 
+
 class Importer(importer.ImporterProtocol):
     def __init__(self) -> None:
         super().__init__()
@@ -82,7 +83,8 @@ class Importer(importer.ImporterProtocol):
                                 done = True
                             if done:
                                 payee = None
-                                narration = "".join(description.split("\n")[:-2])
+                                narration = "".join(
+                                    description.split("\n")[:-2])
                                 value = description.split("\n")[-2]
                                 units = amount.Amount(D(value), currency)
 
@@ -103,13 +105,12 @@ class Importer(importer.ImporterProtocol):
                                 if "Bank of China Mobile Client" in narration and units1.number > 0:
                                     account2 = f"Assets:Card:BoC:{debit_cards[0]}"
 
-
                                 txn = data.Transaction(
                                     meta=metadata, date=date, flag=self.FLAG, payee=payee, narration=narration, tags=data.EMPTY_SET, links=data.EMPTY_SET, postings=[
                                         data.Posting(account=account1, units=units1,
-                                                    cost=None, price=None, flag=None, meta=None),
+                                                     cost=None, price=None, flag=None, meta=None),
                                         data.Posting(account=account2, units=None,
-                                                    cost=None, price=None, flag=None, meta=None),
+                                                     cost=None, price=None, flag=None, meta=None),
                                     ])
                                 entries.append(txn)
         return entries
