@@ -80,7 +80,9 @@ class Importer(importer.ImporterProtocol):
                                                       date,
                                                       date + datetime.timedelta(days=1))):
                             # Dedup if account & units match
-                            if entry.postings[0].units == -units and entry.postings[0].account == account1 and "财付通" in entry.narration:
+                            if entry.postings[0].units == -units and \
+                                entry.postings[0].account == account1 and \
+                                    ("财付通" in entry.narration or "微信支付" in entry.narration):
                                 metadata[DUPLICATE_META] = True
                     elif "亲属卡交易-退款" == row[1]:
                         narration = "亲属卡-退款"
