@@ -7,7 +7,7 @@ from china_bean_importers.secret import *
 import fitz
 
 
-def gen_txn(file, parts, lineno, card_number, flag):
+def gen_txn(file, parts, lineno, card_number, flag, real_name):
     # print(parts)
     assert len(parts) == 12
 
@@ -24,6 +24,12 @@ def gen_txn(file, parts, lineno, card_number, flag):
     for key in expenses:
         if key in narration:
             account2 = expenses[key]
+
+    # Handle transfer to credit cards
+    if parts[9] == real_name:
+        card_number2 = int(parts[10][-4:])
+        if card_number2 in credit_cards:
+            account2 = f'Liabilities:Card:BoC:{card_number2}'
 
     txn = data.Transaction(
         meta=metadata, date=date, flag=flag, payee=payee, narration=narration, tags=data.EMPTY_SET, links=data.EMPTY_SET, postings=[
@@ -82,6 +88,8 @@ class Importer(importer.ImporterProtocol):
         card_number = None
         begin = False
         lineno = 0
+        real_name = None
+        real_name_next = False
         for i in range(doc.page_count):
             parts = []
             page = doc[i]
@@ -94,6 +102,13 @@ class Importer(importer.ImporterProtocol):
                 # print(x0, y0, x1, y1, repr(content), block_no, line_no, word_no)
                 lineno += 1
                 content = content.strip()
+
+                # Find real name
+                if content == "客户姓名：" and real_name is None:
+                    real_name_next = True
+                elif real_name_next:
+                    real_name_next = False
+                    real_name = content
 
                 match = re.search('[0-9]{19}', content)
                 if match and card_number is None:
@@ -109,7 +124,7 @@ class Importer(importer.ImporterProtocol):
                             # a new entry
                             if len(parts) > 0:
                                 txn = gen_txn(file, parts, lineno,
-                                              card_number, self.FLAG)
+                                              card_number, self.FLAG, real_name)
                                 entries.append(txn)
                                 parts = []
 
@@ -130,7 +145,7 @@ class Importer(importer.ImporterProtocol):
                         last_y0 = y0
             if len(parts) > 0:
                 txn = gen_txn(file, parts, lineno,
-                              card_number, self.FLAG)
+                              card_number, self.FLAG, real_name)
                 entries.append(txn)
                 parts = []
         return entries
