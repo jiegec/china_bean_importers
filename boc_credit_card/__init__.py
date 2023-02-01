@@ -102,8 +102,12 @@ class Importer(importer.ImporterProtocol):
                                     # Deposit
                                     units1 = units
 
+                                # Assume transfer from the first debit card?
                                 if "Bank of China Mobile Client" in narration and units1.number > 0:
                                     account2 = f"Assets:Card:BoC:{debit_cards['BoC'][0]}"
+                                    # Swap for deduplication
+                                    account1, account2 = account2, account1
+                                    units1 = -units1
 
                                 txn = data.Transaction(
                                     meta=metadata, date=date, flag=self.FLAG, payee=payee, narration=narration, tags=data.EMPTY_SET, links=data.EMPTY_SET, postings=[
