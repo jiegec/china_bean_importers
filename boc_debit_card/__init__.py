@@ -19,7 +19,7 @@ def gen_txn(file, parts, lineno, card_number, flag):
     units1 = amount.Amount(D(parts[3]), "CNY")
 
     metadata = data.new_metadata(file.name, lineno)
-    account1 = f"Liabilities:Card:BoC:{card_number}"
+    account1 = f"Assets:Card:BoC:{card_number}"
     account2 = "Expenses:Unknown"
     for key in expenses:
         if key in narration:
