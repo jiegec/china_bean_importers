@@ -6,6 +6,7 @@ beancount 导入脚本，数据源：
 - 支付宝（网页端）
 - 支付宝（手机端）
 - 中国银行信用卡
+- 中国银行借记卡
 
 ## 使用方法
 
@@ -28,13 +29,14 @@ pip3 install -r requirements.txt
 最后，在导入脚本中加入：
 
 ```python
-from china_bean_importers import wechat, alipay_web, alipay_mobile, boc_credit_card
+from china_bean_importers import wechat, alipay_web, alipay_mobile, boc_credit_card, boc_debit_card
 
 CONFIG = [
     wechat.Importer(),
     alipay_web.Importer(),
     alipay_mobile.Importer(),
     boc_credit_card.Importer(),
+    boc_debit_card.Importer(),
 ]
 ```
 
@@ -81,3 +83,9 @@ CONFIG = [
 ### 中国银行信用卡
 
 每个月中行会发送信用卡合并账单，下载附件即可。
+
+### 中国银行借记卡
+
+在中国银行手机客户端，点击更多->助手->交易流水打印->立即申请，记录下 PDF 密码。
+
+下载邮件附件，得到带有密码的 PDF 文件，把密码记录到 `secret.py` 中。
