@@ -31,13 +31,19 @@ def gen_txn(file, parts, lineno, card_number, flag, real_name):
         if key in narration:
             account2 = expenses[key]
 
-    # Handle transfer to credit cards
+    # Handle transfer to credit/debit cards
     # parts[9]: 对方账户名
     if parts[9] == real_name:
         # parts[10]: 对方卡号/账号
         card_number2 = int(parts[10][-4:])
-        if card_number2 in credit_cards["BoC"]:
-            account2 = f'Liabilities:Card:BoC:{card_number2}'
+        for bank in credit_cards:
+            if card_number2 in credit_cards[bank]:
+                account2 = f'Liabilities:Card:{bank}:{card_number2}'
+                break
+        for bank in debit_cards:
+            if card_number2 in debit_cards[bank]:
+                account2 = f'Assets:Card:{bank}:{card_number2}'
+                break
 
     txn = data.Transaction(
         meta=metadata, date=date, flag=flag, payee=payee, narration=narration, tags=data.EMPTY_SET, links=data.EMPTY_SET, postings=[
