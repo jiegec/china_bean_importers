@@ -1,4 +1,5 @@
 from dateutil.parser import parse
+import datetime
 from beancount.ingest import importer
 from beancount.core import data, amount
 from beancount.core.number import D
@@ -16,6 +17,23 @@ class Importer(importer.ImporterProtocol):
 
     def file_account(self, file):
         return "boc_credit_card"
+
+    def file_date(self, file):
+        doc = fitz.open(file.name)
+        begin = False
+        page = doc[0]
+        text = page.get_text("blocks")
+        for (x0, y0, x1, y1, content, block_no, block_type) in text:
+            content = content.strip()
+            if not begin and "Current FCY Total Balance Due" in content:
+                begin = True
+            elif begin:
+                parts = content.split('\n')
+                if len(parts) == 4:
+                    return parse(parts[1])
+                else:
+                    break
+        return super().file_date(file)
 
     def extract(self, file, existing_entries=None):
         entries = []

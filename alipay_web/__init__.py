@@ -17,6 +17,24 @@ class Importer(importer.ImporterProtocol):
     def file_account(self, file):
         return "alipay_web"
 
+    def file_date(self, file):
+        with open(file.name, 'r', encoding='gbk') as f:
+            for row in csv.reader(f):
+                m = re.search('起始日期:\[([0-9 :-]+)\]', row[0])
+                if m:
+                    date = parse(m[1])
+                    return date
+        return super().file_date(file)
+
+    def file_name(self, file):
+        with open(file.name, 'r', encoding='gbk') as f:
+            for row in csv.reader(f):
+                m = re.search('终止日期:\[([0-9 :-]+)\]', row[0])
+                if m:
+                    date = parse(m[1])
+                    return date.date().isoformat() + '.txt'
+        return super().file_name(file)
+
     def extract(self, file, existing_entries=None):
         entries = []
         begin = False

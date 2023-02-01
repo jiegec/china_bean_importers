@@ -17,6 +17,13 @@ class Importer(importer.ImporterProtocol):
     def file_account(self, file):
         return "wechat"
 
+    def file_date(self, file):
+        m = re.search('([0-9]+)-[0-9]+', file.name)
+        if m:
+            date = parse(m[1])
+            return date
+        return super().file_date(file)
+
     def extract(self, file, existing_entries=None):
         entries = []
         begin = False
