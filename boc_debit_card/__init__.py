@@ -11,11 +11,16 @@ def gen_txn(file, parts, lineno, card_number, flag, real_name):
     # print(parts)
     assert len(parts) == 12
 
+    # parts[9]: 对方账户名
     payee = parts[9]
+    # parts[8]: 附言
     narration = parts[8]
     if '------' in narration:
+        # parts[5]: 交易名称
         narration = parts[5]
+    # parts[0]: 记账日期
     date = parse(parts[0]).date()
+    # parts[3]: 金额
     units1 = amount.Amount(D(parts[3]), "CNY")
 
     metadata = data.new_metadata(file.name, lineno)
@@ -26,7 +31,9 @@ def gen_txn(file, parts, lineno, card_number, flag, real_name):
             account2 = expenses[key]
 
     # Handle transfer to credit cards
+    # parts[9]: 对方账户名
     if parts[9] == real_name:
+        # parts[10]: 对方卡号/账号
         card_number2 = int(parts[10][-4:])
         if card_number2 in credit_cards:
             account2 = f'Liabilities:Card:BoC:{card_number2}'
