@@ -83,7 +83,7 @@ class Importer(importer.ImporterProtocol):
             match = re.match(
                 '交易区间： ([0-9]+-[0-9]+-[0-9]+) 至 ([0-9]+-[0-9]+-[0-9]+)', content)
             if match:
-                return match[2] + ".pdf"
+                return "to." + match[2] + ".pdf"
         return super().file_name(file)
 
     def extract(self, file, existing_entries=None):

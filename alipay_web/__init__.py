@@ -32,7 +32,7 @@ class Importer(importer.ImporterProtocol):
                 m = re.search('终止日期:\[([0-9 :-]+)\]', row[0])
                 if m:
                     date = parse(m[1])
-                    return date.date().isoformat() + '.txt'
+                    return "to." + date.date().isoformat() + '.txt'
         return super().file_name(file)
 
     def extract(self, file, existing_entries=None):

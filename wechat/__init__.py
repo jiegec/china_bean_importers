@@ -18,11 +18,20 @@ class Importer(importer.ImporterProtocol):
         return "wechat"
 
     def file_date(self, file):
-        m = re.search('([0-9]+)-[0-9]+', file.name)
-        if m:
-            date = parse(m[1])
-            return date
+        with open(file.name, 'r') as f:
+            m = re.search('起始时间：\[([0-9]+-[0-9]+-[0-9]+)', f.read())
+            if m:
+                date = parse(m[1])
+                return date
         return super().file_date(file)
+
+    def file_name(self, file):
+        with open(file.name, 'r') as f:
+            m = re.search('终止时间：\[([0-9]+-[0-9]+-[0-9]+)', f.read())
+            if m:
+                date = parse(m[1]).date()
+                return f"to.{date}.csv"
+        return super().file_name(file)
 
     def extract(self, file, existing_entries=None):
         entries = []

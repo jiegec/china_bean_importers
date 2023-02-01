@@ -32,7 +32,7 @@ class Importer(importer.ImporterProtocol):
                 m = re.search('终止时间：\[([0-9 :-]+)\]', row[0])
                 if m:
                     date = parse(m[1])
-                    return date.date().isoformat() + '.csv'
+                    return "to." + date.date().isoformat() + '.csv'
         return super().file_name(file)
 
     def extract(self, file, existing_entries=None):
