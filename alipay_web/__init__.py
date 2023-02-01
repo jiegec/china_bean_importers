@@ -12,7 +12,7 @@ class Importer(importer.ImporterProtocol):
         super().__init__()
 
     def identify(self, file):
-        return "csv" in file.name and "支付宝交易记录明细查询" in file.head()
+        return "txt" in file.name and "支付宝交易记录明细查询" in file.head()
 
     def file_account(self, file):
         return "alipay_web"
