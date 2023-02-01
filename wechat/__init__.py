@@ -50,9 +50,9 @@ class Importer(importer.ImporterProtocol):
                     account1 = "Assets:Unknown"
                     if "中国银行" in row[6]:
                         card_number = int(row[6][5:9])
-                        if card_number in debit_cards:
+                        if card_number in debit_cards["BoC"]:
                             account1 = f"Assets:Card:BoC:{card_number}"
-                        elif card_number in credit_cards:
+                        elif card_number in credit_cards["BoC"]:
                             account1 = f"Liabilities:Card:BoC:{card_number}"
                         else:
                             print(f"Unknown card number: {card_number}")

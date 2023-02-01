@@ -103,7 +103,7 @@ class Importer(importer.ImporterProtocol):
                                     units1 = units
 
                                 if "Bank of China Mobile Client" in narration and units1.number > 0:
-                                    account2 = f"Assets:Card:BoC:{debit_cards[0]}"
+                                    account2 = f"Assets:Card:BoC:{debit_cards['BoC'][0]}"
 
                                 txn = data.Transaction(
                                     meta=metadata, date=date, flag=self.FLAG, payee=payee, narration=narration, tags=data.EMPTY_SET, links=data.EMPTY_SET, postings=[

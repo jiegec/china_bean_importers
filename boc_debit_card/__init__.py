@@ -36,7 +36,7 @@ def gen_txn(file, parts, lineno, card_number, flag, real_name):
     if parts[9] == real_name:
         # parts[10]: 对方卡号/账号
         card_number2 = int(parts[10][-4:])
-        if card_number2 in credit_cards:
+        if card_number2 in credit_cards["BoC"]:
             account2 = f'Liabilities:Card:BoC:{card_number2}'
 
     txn = data.Transaction(

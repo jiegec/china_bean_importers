@@ -1,6 +1,12 @@
 # Copy this file to secret.py and edit
-credit_cards = [1234, 5678]
-debit_cards = [4321, 8765]
+credit_cards = {
+    "BoC": [1234, 5678],
+    "CMB": [1111, 2222],
+}
+debit_cards = {
+    "BoC": [4321, 8765],
+    "CMB": [3333, 4444],
+}
 pdf_passwords = ["123456"]
 
 # Detect expense accounts
@@ -12,4 +18,5 @@ expenses = {
     "App Store": "Expenses:Apple:AppStore",
     "AppleCare": "Expenses:Apple:AppleCare",
     "iCloud": "Expenses:Apple:ICloud",
+    "工资": "Income:Company"
 }

@@ -57,14 +57,14 @@ class Importer(importer.ImporterProtocol):
                         account1 = "Liabilities:Alipay:HuaBei"
                     elif row[4].startswith("中国银行储蓄卡"):
                         card_number = int(row[4][8:12])
-                        if card_number in debit_cards:
+                        if card_number in debit_cards["BoC"]:
                             account1 = f"Assets:Card:BoC:{card_number}"
                         else:
                             print(f"Unknown card number: {card_number}")
                             assert False
                     elif row[4].startswith("中国银行信用卡"):
                         card_number = int(row[4][8:12])
-                        if card_number in credit_cards:
+                        if card_number in credit_cards["BoC"]:
                             account1 = f"Liabilities:Card:BoC:{card_number}"
                         else:
                             print(f"Unknown card number: {card_number}")
