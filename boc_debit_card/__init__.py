@@ -36,14 +36,9 @@ def gen_txn(file, parts, lineno, card_number, flag, real_name):
     if parts[9] == real_name:
         # parts[10]: 对方卡号/账号
         card_number2 = int(parts[10][-4:])
-        for bank in credit_cards:
-            if card_number2 in credit_cards[bank]:
-                account2 = f'Liabilities:Card:{bank}:{card_number2}'
-                break
-        for bank in debit_cards:
-            if card_number2 in debit_cards[bank]:
-                account2 = f'Assets:Card:{bank}:{card_number2}'
-                break
+        new_account = find_account_by_card_number(card_number2)
+        if new_account is not None:
+            account2 = new_account
 
     txn = data.Transaction(
         meta=metadata, date=date, flag=flag, payee=payee, narration=narration, tags=data.EMPTY_SET, links=data.EMPTY_SET, postings=[
