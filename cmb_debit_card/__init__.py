@@ -4,40 +4,32 @@ from beancount.core import data, amount
 from beancount.core.number import D
 import re
 from china_bean_importers.secret import *
-from china_bean_importers.common import *
 import fitz
 
 
-def gen_txn(file, parts, lineno, card_number, flag, real_name):
-    # print(parts)
-    assert len(parts) == 12
+def gen_txn(file, parts, lineno, card_number, flag):
+    # Customer Type can be empty
+    assert len(parts) == 6 or len(parts) == 7
 
-    # parts[9]: 对方账户名
-    payee = parts[9]
-    # parts[8]: 附言
-    narration = parts[8]
-    if '------' in narration:
-        # parts[5]: 交易名称
-        narration = parts[5]
+    # parts[5]: 对手信息
+    payee = parts[5]
+    if len(parts) == 7:
+        # parts[6]: 客户摘要
+        narration = parts[6]
+    else:
+        # parts[4]: 交易摘要
+        narration = parts[4]
     # parts[0]: 记账日期
     date = parse(parts[0]).date()
-    # parts[3]: 金额
-    units1 = amount.Amount(D(parts[3]), "CNY")
+    # parts[2]: 金额
+    units1 = amount.Amount(D(parts[2]), "CNY")
 
     metadata = data.new_metadata(file.name, lineno)
-    account1 = f"Assets:Card:BoC:{card_number}"
+    account1 = f"Assets:Card:CMB:{card_number}"
     account2 = "Expenses:Unknown"
     for key in expenses:
         if key in narration:
             account2 = expenses[key]
-
-    # Handle transfer to credit cards
-    # parts[9]: 对方账户名
-    if parts[9] == real_name:
-        # parts[10]: 对方卡号/账号
-        card_number2 = int(parts[10][-4:])
-        if card_number2 in credit_cards:
-            account2 = f'Liabilities:Card:BoC:{card_number2}'
 
     txn = data.Transaction(
         meta=metadata, date=date, flag=flag, payee=payee, narration=narration, tags=data.EMPTY_SET, links=data.EMPTY_SET, postings=[
@@ -55,86 +47,50 @@ class Importer(importer.ImporterProtocol):
 
     def identify(self, file):
         if "pdf" in file.name:
-            doc = open_pdf(file.name)
-            if doc is None:
+            doc = fitz.open(file.name)
+            if doc.is_encrypted:
                 return False
-            if "中国银行交易流水明细清单" in doc[0].get_text("text"):
+            if "招商银行交易流水" in doc[0].get_text("text"):
                 return True
         return False
 
     def file_account(self, file):
-        return "boc_debit_card"
-
-    def file_date(self, file):
-        doc = open_pdf(file.name)
-        if doc is not None:
-            page = doc[0]
-            text = page.get_text("blocks")
-            for (x0, y0, x1, y1, content, block_no, block_type) in text:
-                match = re.match(
-                    '交易区间： ([0-9]+-[0-9]+-[0-9]+) 至 ([0-9]+-[0-9]+-[0-9]+)', content)
-                if match:
-                    return parse(match[1])
-        return super().file_date(file)
-
-    def file_name(self, file):
-        doc = open_pdf(file.name)
-        if doc is not None:
-            page = doc[0]
-            text = page.get_text("blocks")
-            for (x0, y0, x1, y1, content, block_no, block_type) in text:
-                match = re.match(
-                    '交易区间： ([0-9]+-[0-9]+-[0-9]+) 至 ([0-9]+-[0-9]+-[0-9]+)', content)
-                if match:
-                    return "to." + match[2] + ".pdf"
-        return super().file_name(file)
+        return "cmb_debit_card"
 
     def extract(self, file, existing_entries=None):
         entries = []
-        doc = open_pdf(file.name)
-        if doc is None:
-            return entries
-
+        doc = fitz.open(file.name)
         card_number = None
         begin = False
         lineno = 0
-        real_name = None
-        real_name_next = False
         for i in range(doc.page_count):
             parts = []
             page = doc[i]
             text = page.get_text("words")
             last_y0 = 0
+            last_content = ""
             # y position of columns
-            columns = [46, 112, 172, 234, 300,
-                       339, 405, 447, 518, 590, 660, 740]
+            columns = [30, 50, 100, 200, 280, 350, 450]
             for (x0, y0, x1, y1, content, block_no, line_no, word_no) in text:
                 # print(x0, y0, x1, y1, repr(content), block_no, line_no, word_no)
                 lineno += 1
                 content = content.strip()
 
-                # Find real name
-                if content == "客户姓名：" and real_name is None:
-                    real_name_next = True
-                elif real_name_next:
-                    real_name_next = False
-                    real_name = content
-
-                match = re.search('[0-9]{19}', content)
+                match = re.search('[0-9]{16}', content)
                 if match and card_number is None:
                     card_number = int(match[0][-4:])
                     begin = False
                 elif card_number:
-                    if not begin and "对方开户行" in content:
+                    if not begin and "Type" in content and "Customer" in last_content:
                         begin = True
-                    elif begin and "温馨提示" in content:
+                    elif begin and "合并统计" in content:
                         begin = False
                     elif begin:
                         if x0 < 50:
                             # a new entry
                             if len(parts) > 0:
                                 txn = gen_txn(file, parts, lineno,
-                                              card_number, self.FLAG, real_name)
+                                              card_number, self.FLAG)
                                 entries.append(txn)
                                 parts = []
 
@@ -153,9 +109,10 @@ class Importer(importer.ImporterProtocol):
                                     # newline
                                     parts[-1] = parts[-1] + content
                         last_y0 = y0
+                last_content = content
             if len(parts) > 0:
                 txn = gen_txn(file, parts, lineno,
-                              card_number, self.FLAG, real_name)
+                              card_number, self.FLAG)
                 entries.append(txn)
                 parts = []
         return entries

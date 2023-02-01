@@ -7,6 +7,7 @@ beancount 导入脚本，数据源：
 - 支付宝（手机端）
 - 中国银行信用卡
 - 中国银行借记卡
+- 招商银行借记卡
 
 ## 使用方法
 
@@ -29,7 +30,7 @@ pip3 install -r requirements.txt
 最后，在导入脚本中加入：
 
 ```python
-from china_bean_importers import wechat, alipay_web, alipay_mobile, boc_credit_card, boc_debit_card
+from china_bean_importers import wechat, alipay_web, alipay_mobile, boc_credit_card, boc_debit_card, cmb_debit_card
 
 CONFIG = [
     wechat.Importer(),
@@ -37,6 +38,7 @@ CONFIG = [
     alipay_mobile.Importer(),
     boc_credit_card.Importer(),
     boc_debit_card.Importer(),
+    cmb_debit_card.Importer(),
 ]
 ```
 
@@ -89,3 +91,9 @@ CONFIG = [
 在中国银行手机客户端，点击更多->助手->交易流水打印->立即申请，记录下 PDF 密码。
 
 下载邮件附件，得到带有密码的 PDF 文件，把密码记录到 `secret.py` 中。
+
+### 招商银行借记卡
+
+在中国银行手机客户端，点击首页->流水打印->高级筛选->显示完整卡号->显示收入及支出汇总金额->同意协议并提交，记录下解压密码。
+
+下载邮件附件，输入密码解压 ZIP 文件，得到 PDF。
