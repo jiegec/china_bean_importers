@@ -34,6 +34,15 @@ def find_wechat_family(new_entries_list, existing_entries):
                 if (entry.date, entry.postings[0]) in wechat_family:
                     tags = entry.tags.union({"Family"})
                     entry = entry._replace(tags=tags)
+                    if entry.postings[0].units.number > 0:
+                        narration = f"亲属卡 - 退款 - {entry.narration}"
+                        if entry.postings[1].account == "Expenses:Unknown":
+                            postings = entry.postings
+                            postings[1] = postings[1]._replace(account = "Expenses:Refund")
+                            entry = entry._replace(postings=postings)
+                    else:
+                        narration = f"亲属卡 - {entry.narration}"
+                    entry = entry._replace(narration=narration)
             mod_entries.append(entry)
         mod_entries_list.append((key, mod_entries))
     return mod_entries_list
