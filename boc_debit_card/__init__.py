@@ -3,11 +3,11 @@ from beancount.ingest import importer
 from beancount.core import data, amount
 from beancount.core.number import D
 import re
-from china_bean_importers.secret import *
+
 from china_bean_importers.common import *
 
 
-def gen_txn(file, parts, lineno, card_number, flag, real_name):
+def gen_txn(config, file, parts, lineno, card_number, flag, real_name):
     # print(parts)
     assert len(parts) == 12
 
@@ -24,21 +24,15 @@ def gen_txn(file, parts, lineno, card_number, flag, real_name):
     units1 = amount.Amount(D(parts[3]), "CNY")
 
     metadata = data.new_metadata(file.name, lineno)
-    account1 = f"Assets:Card:BoC:{card_number}"
-    account2 = "Expenses:Unknown"
-    for key in expenses:
-        if key in narration:
-            account2 = expenses[key]
-        elif key in payee:
-            account2 = expenses[key]
+    account1 = f"{config.debit_card_prefix}:BoC:{card_number}"
+    account2 = find_destination_account(config, narration, True)
 
     # Handle transfer to credit/debit cards
     # parts[9]: 对方账户名
     if parts[9] == real_name:
         # parts[10]: 对方卡号/账号
-        card_number2 = int(parts[10][-4:])
-        new_account = find_account_by_card_number(card_number2)
-        if new_account is not None:
+        card_number2 = parts[10][-4:]
+        if new_account := find_account_by_card_number(card_number2) is not None:
             account2 = new_account
 
     txn = data.Transaction(
@@ -52,8 +46,9 @@ def gen_txn(file, parts, lineno, card_number, flag, real_name):
 
 
 class Importer(importer.ImporterProtocol):
-    def __init__(self) -> None:
+    def __init__(self, config) -> None:
         super().__init__()
+        self.config = config
 
     def identify(self, file):
         if "pdf" in file.name:
@@ -135,7 +130,7 @@ class Importer(importer.ImporterProtocol):
                         if x0 < 50:
                             # a new entry
                             if len(parts) > 0:
-                                txn = gen_txn(file, parts, lineno,
+                                txn = gen_txn(self.config, file, parts, lineno,
                                               card_number, self.FLAG, real_name)
                                 entries.append(txn)
                                 parts = []
@@ -156,7 +151,7 @@ class Importer(importer.ImporterProtocol):
                                     parts[-1] = parts[-1] + content
                         last_y0 = y0
             if len(parts) > 0:
-                txn = gen_txn(file, parts, lineno,
+                txn = gen_txn(self.config, file, parts, lineno,
                               card_number, self.FLAG, real_name)
                 entries.append(txn)
                 parts = []

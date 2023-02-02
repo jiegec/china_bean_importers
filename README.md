@@ -25,23 +25,24 @@ git submodule add git@github.com:jiegec/china_bean_importers.git
 pip3 install -r requirements.txt
 ```
 
-从模板 `secret.example.py` 复制并编辑 secret.py。目前只考虑了中行银行卡。
+运行 `cp config.example.py config.py` 复制配置模板，编辑 `config.py` 填入你的配置，**放置在你的项目目录中**。
 
-最后，在导入脚本中加入：
+最后，在导入脚本中按需加入：
 
 ```python
 from china_bean_importers import wechat, alipay_web, alipay_mobile, boc_credit_card, boc_debit_card, cmb_debit_card
 
+from china_bean_importer_config import config # your config file name
+
 CONFIG = [
-    wechat.Importer(),
-    alipay_web.Importer(),
-    alipay_mobile.Importer(),
-    boc_credit_card.Importer(),
-    boc_debit_card.Importer(),
-    cmb_debit_card.Importer(),
+    wechat.Importer(config),
+    alipay_web.Importer(config),
+    alipay_mobile.Importer(config),
+    boc_credit_card.Importer(config),
+    boc_debit_card.Importer(config),
+    cmb_debit_card.Importer(config),
 ]
 ```
-
 
 ## 数据源
 
@@ -90,7 +91,7 @@ CONFIG = [
 
 在中国银行手机客户端，点击更多->助手->交易流水打印->立即申请，记录下 PDF 密码。
 
-下载邮件附件，得到带有密码的 PDF 文件，把密码记录到 `secret.py` 中。
+下载邮件附件，得到带有密码的 PDF 文件，把密码记录到 `config.py` 中。
 
 ### 招商银行借记卡
 

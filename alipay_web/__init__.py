@@ -4,12 +4,14 @@ from beancount.core import data, amount
 from beancount.core.number import D
 import csv
 import re
-from china_bean_importers.secret import *
+
+from china_bean_importers.common import *
 
 
 class Importer(importer.ImporterProtocol):
-    def __init__(self) -> None:
+    def __init__(self, config) -> None:
         super().__init__()
+        self.config = config
 
     def identify(self, file):
         return "txt" in file.name and "支付宝交易记录明细查询" in file.head()
@@ -55,9 +57,7 @@ class Importer(importer.ImporterProtocol):
                     account1 = "Assets:Alipay"
 
                     account2 = "Expenses:Unknown"
-                    for key in expenses:
-                        if key in row[7]:
-                            account2 = expenses[key]
+                    account2 = find_destination_account(self.config, row[7], row[10] == "支出")
 
                     if row[10] == "支出":
                         units1 = -units

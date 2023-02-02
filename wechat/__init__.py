@@ -4,7 +4,8 @@ from beancount.core import data, amount
 from beancount.core.number import D
 import csv
 import re
-from china_bean_importers.secret import *
+
+from china_bean_importers.config import *
 
 
 class Importer(importer.ImporterProtocol):

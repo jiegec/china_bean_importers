@@ -3,7 +3,7 @@ from beancount.ingest import importer
 from beancount.core import data, amount
 from beancount.core.number import D
 import re
-from china_bean_importers.secret import *
+from china_bean_importers.config import *
 from china_bean_importers.common import *
 import fitz
 
