@@ -13,8 +13,11 @@ class Importer(importer.ImporterProtocol):
         self.config = config
 
     def identify(self, file):
-        with open(file.name, 'r', encoding='gbk') as f:
-            return "csv" in file.name and "电子客户回单" in f.readline()
+        try:
+            with open(file.name, 'r', encoding='gbk') as f:
+                return "csv" in file.name and "电子客户回单" in f.readline()
+        except:
+            return False
         
 
     def file_account(self, file):
@@ -93,12 +96,12 @@ class Importer(importer.ImporterProtocol):
                         units = -units
 
                     # find source from 收付款方式
-                    alipay_config = self.config['source']['alipay']
-                    account1 = alipay_config['account'] # 支付宝余额
+                    source_config = self.config['source']['alipay']
+                    account1 = source_config['account'] # 支付宝余额
                     if method == "花呗":
-                        account1 = alipay_config['huabei_account']
+                        account1 = source_config['huabei_account']
                     if method == "余额宝":
-                        account1 = alipay_config['yuebao_account']
+                        account1 = source_config['yuebao_account']
                     elif tail := match_card_tail(method):
                         account1 = find_account_by_card_number(self.config, tail)
                         my_assert(account1, f"Unknown card number {tail}", lineno, row)

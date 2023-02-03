@@ -5,15 +5,20 @@ from beancount.core.number import D
 import csv
 import re
 
-from china_bean_importers.config import *
+from china_bean_importers.common import *
 
 
 class Importer(importer.ImporterProtocol):
-    def __init__(self) -> None:
+    def __init__(self, config) -> None:
         super().__init__()
+        self.config = config
 
     def identify(self, file):
-        return "csv" in file.name and "微信支付账单明细" in file.head()
+        try:
+            with open(file.name, 'r', encoding='utf-8') as f:
+                return "csv" in file.name and "微信支付账单明细" in f.readline()
+        except:
+            return False
 
     def file_account(self, file):
         return "wechat"
@@ -39,71 +44,93 @@ class Importer(importer.ImporterProtocol):
         begin = False
         with open(file.name, 'r') as f:
             for lineno, row in enumerate(csv.reader(f)):
+                #    0        1        2     3     4     5      6        7       8        9     10
+                # 交易时间, 交易类型, 交易对方, 商品, 收/支, 金额, 支付方式, 当前状态, 交易单号, 商户单号, 备注
                 if row[0] == "交易时间" and row[1] == "交易类型":
+                    # skip table header
                     begin = True
                 elif begin:
+                    # parse data line
                     metadata = data.new_metadata(file.name, lineno)
+                    tags = set()
+
+                    # parse some basic info
                     date = parse(row[0]).date()
                     units = amount.Amount(D(row[5][1:]), "CNY")
-                    payee = row[2]
-                    narration = row[3]
+                    _, type, payee, narration, direction, _, method, status, series, _, note = row
 
-                    account1 = "Assets:Unknown"
-                    if "中国银行" in row[6]:
-                        card_number = int(row[6][5:9])
-                        if card_number in debit_cards["BoC"]:
-                            account1 = f"Assets:Card:BoC:{card_number}"
-                        elif card_number in credit_cards["BoC"]:
-                            account1 = f"Liabilities:Card:BoC:{card_number}"
-                        else:
-                            print(f"Unknown card number: {card_number}")
-                            assert False
-                    elif "零钱" in row[6] or "零钱" in row[7]:
-                        account1 = f"Assets:WeChat"
+                    # fill metadata
+                    metadata["imported_type"] = type
+                    if payee == '/':
+                        payee = None
+                    if narration == '/':
+                        narration = None
+                    if method == '/':
+                        method = None
+                    
+                    my_assert(direction in ["收入", "支出"], f"Unknown direction: {direction}", lineno, row)
+                    expense = direction == "支出"
 
-                    account2 = "Expenses:Unknown"
-                    for key in expenses:
-                        if key in row[2]:
-                            account2 = expenses[key]
+                    # determine sign of amount
+                    if expense:
+                        units = -units
 
-                    if "微信红包" in row[1]:
-                        narration = row[1]
-                        account2 = "Expenses:RedPacket"
+                    # determine source account
+                    source_config = self.config['source']['wechat']
+                    account1 = None
+                    if method == '零钱' or status == '已存入零钱': # 微信零钱
+                        account1 = source_config['account']
+                    elif tail := match_card_tail(method): # cards
+                        account1 = find_account_by_card_number(self.config, tail)
+                        my_assert(account1, f"Unknown card number {tail}", lineno, row)
+ 
+                    # TODO: handle 零钱通 account
+                    # TODO: handle 数字人民币 account?
+
+                    # determine destination account
+                    account2 = None
+                    # 1. receive red packet
+                    if type == "微信红包" and not expense and status == '已存入零钱':
+                        account2 = source_config['red_packet_income_account']
+                        narration = "收微信红包"
+                    # 2. send red packet
+                    elif expense and "微信红包" in type:
+                        narration = "发微信红包"
+                        account2 = source_config['red_packet_expense_account']
                         if payee[0:2] == "发给":
                             payee = payee[2:]
-                    elif "亲属卡交易" == row[1]:
-                        account2 = "Expenses:Family"
-                    elif "亲属卡交易-退款" == row[1]:
+                    # 3. family card
+                    elif "亲属卡交易" == type:
+                        account2 = source_config['family_card_expense_account']
+                    elif "亲属卡交易-退款" == type:
                         narration = "亲属卡-退款"
-                        account2 = "Expenses:Family"
-                    elif "群收款" == row[1]:
+                        account2 = source_config['family_card_expense_account']
+                    # 4. group payment
+                    elif "群收款" == type:
                         narration = "群收款"
-                        account2 = "Expenses:WeChat:Group"
-                    elif "转账" == row[1]:
-                        account2 = "Expenses:WeChat:Transfer"
-
-                    # MeiTuan
-                    match = re.match('【(.*)】', narration)
-                    if match:
-                        narration = match[1]
-
-                    if row[4] == "支出":
-                        units1 = -units
-                    elif row[4] == "收入":
-                        units1 = units
+                        account2 = source_config['group_payment_expense_account'] if expense else source_config['group_payment_income_account']
+                    # 5. transfer
+                    elif "转账" == type:
+                        account2 = source_config['transfer_expense_account'] if expense else source_config['transfer_income_account']
+                    # 6. find by narration
                     else:
-                        assert False
+                        account2 = find_destination_account(self.config, narration, expense)
 
-                    # Remove placeholder
-                    if payee == "/":
-                        payee = None
+                    # # MeiTuan
+                    # match = re.match('【(.*)】', narration)
+                    # if match:
+                    #     narration = match[1]
 
+                    # TODO: check status
+
+                    # create transaction
                     txn = data.Transaction(
-                        meta=metadata, date=date, flag=self.FLAG, payee=payee, narration=narration, tags=data.EMPTY_SET, links=data.EMPTY_SET, postings=[
-                            data.Posting(account=account1, units=units1,
+                        meta=metadata, date=date, flag=self.FLAG, payee=payee, narration=narration, tags=tags, links=data.EMPTY_SET, postings=[
+                            data.Posting(account=account1, units=units,
                                          cost=None, price=None, flag=None, meta=None),
                             data.Posting(account=account2, units=None,
                                          cost=None, price=None, flag=None, meta=None),
                         ])
                     entries.append(txn)
+
         return entries

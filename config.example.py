@@ -9,7 +9,15 @@ config = {
             "yuebao_account": "Assets:Alipay:YueBao",
         },
         'wechat': {
-
+            "account": "Assets:WeChat",
+            "lingqiantong_account": "Assets:WeChat:LingQianTong",
+            "red_packet_income_account": "Income:WeChat:RedPacket",
+            "red_packet_expense_account": "Expenses:WeChat:RedPacket",
+            "family_card_expense_account": "Expenses:WeChat:FamilyCard",
+            "group_payment_expense_account": "Expenses:WeChat:Group",
+            "group_payment_income_account": "Income:WeChat:Group",
+            "transfer_expense_account": "Expenses:WeChat:Transfer",
+            "transfer_income_account": "Income:WeChat:Transfer",
         }
     },
 

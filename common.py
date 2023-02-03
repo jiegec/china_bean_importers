@@ -5,6 +5,7 @@ import fitz
 card_tail_pattern = re.compile('.*银行.*\(([0-9]{4})\)')
 
 def match_card_tail(src):
+    assert(type(src) == str)
     m = card_tail_pattern.match(src)
     return m[1] if m else None
 
@@ -20,7 +21,6 @@ def open_pdf(config, name):
 
 
 def find_account_by_card_number(config, card_number):
-
     for prefix, accounts in config['card_accounts'].items():
         for bank, numbers in accounts.items():
             if card_number in numbers:
@@ -29,11 +29,10 @@ def find_account_by_card_number(config, card_number):
     return None
 
 
-def find_destination_account(config, src, expense):
-
-    for key in config['destination_accounts']:
-        if key in src:
-            return config['destination_accounts'][key]
+def find_destination_account(config, desc, expense):
+    for keyword in config['destination_accounts']:
+        if keyword in desc:
+            return config['destination_accounts'][keyword]
 
     return config['unknown_expense_account'] if expense else config['unknown_income_account']
 
