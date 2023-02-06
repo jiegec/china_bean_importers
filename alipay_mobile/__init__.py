@@ -70,6 +70,7 @@ class Importer(importer.ImporterProtocol):
                     if payee_account != '':
                         metadata["payee_account"] = row[2]
                     metadata["imported_category"] = category
+                    metadata["source"] = "支付宝"
 
                     expense = None
                     # determine direction

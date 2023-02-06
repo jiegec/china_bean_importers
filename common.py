@@ -30,9 +30,11 @@ def find_account_by_card_number(config, card_number):
 
 
 def find_destination_account(config, desc, expense):
-    for keyword in config['destination_accounts']:
-        if keyword in desc:
-            return config['destination_accounts'][keyword]
+    
+    if desc is not None:
+        for keyword in config['destination_accounts']:
+            if keyword in desc:
+                return config['destination_accounts'][keyword]
 
     return config['unknown_expense_account'] if expense else config['unknown_income_account']
 

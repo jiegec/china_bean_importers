@@ -38,7 +38,7 @@ config = {
     'unknown_expense_account': 'Expenses:Unknown',
     'unknown_income_account': 'Income:Unknown',
 
-    'destination_accounts': {
+    'destination_account_mapping': {
         # expenses
         "京东": "Expenses:JD",
         "中铁网络": "Expenses:Travel:Train",

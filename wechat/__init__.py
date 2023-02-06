@@ -57,17 +57,25 @@ class Importer(importer.ImporterProtocol):
                     # parse some basic info
                     date = parse(row[0]).date()
                     units = amount.Amount(D(row[5][1:]), "CNY")
-                    _, type, payee, narration, direction, _, method, status, series, _, note = row
+                    _, type, payee, narration, direction, _, method, status, serial, _, note = row
 
                     # fill metadata
-                    metadata["imported_type"] = type
+                    metadata["source"] = "微信支付"
+                    metadata["imported_category"] = type
+                    metadata["serial"] = serial
                     if payee == '/':
                         payee = None
                     if narration == '/':
-                        narration = None
+                        narration = ''
                     if method == '/':
                         method = None
                     
+                    # workaround
+                    if direction == '/' and type == '信用卡还款':
+                        direction = '支出'
+                    if (i := narration.find('付款方留言')) != -1:
+                        narration = f'{narration[:i]};{narration[i:]}'
+
                     my_assert(direction in ["收入", "支出"], f"Unknown direction: {direction}", lineno, row)
                     expense = direction == "支出"
 
@@ -83,9 +91,10 @@ class Importer(importer.ImporterProtocol):
                     elif tail := match_card_tail(method): # cards
                         account1 = find_account_by_card_number(self.config, tail)
                         my_assert(account1, f"Unknown card number {tail}", lineno, row)
- 
+    
                     # TODO: handle 零钱通 account
                     # TODO: handle 数字人民币 account?
+                    my_assert(account1, f"Cannot handle source {method}", lineno, row)
 
                     # determine destination account
                     account2 = None
@@ -116,12 +125,14 @@ class Importer(importer.ImporterProtocol):
                     else:
                         account2 = find_destination_account(self.config, narration, expense)
 
-                    # # MeiTuan
-                    # match = re.match('【(.*)】', narration)
-                    # if match:
-                    #     narration = match[1]
-
-                    # TODO: check status
+                    # check status
+                    if status in ['支付成功', '已存入零钱', '已转账', '已收钱']:
+                        pass
+                    elif '退款' in status:
+                        tags.add('refund')
+                    else:
+                        tags.add('confirmation-needed')
+                        my_warn(f"Unhandled status: {status}", lineno, row)
 
                     # create transaction
                     txn = data.Transaction(
