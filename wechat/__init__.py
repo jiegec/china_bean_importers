@@ -69,6 +69,8 @@ class Importer(importer.ImporterProtocol):
                         narration = ''
                     if method == '/':
                         method = None
+                    if '亲属卡交易' in type:
+                        tags.add('family-card')
                     
                     # workaround
                     if direction == '/' and type == '信用卡还款':

@@ -71,6 +71,8 @@ class Importer(importer.ImporterProtocol):
                         metadata["payee_account"] = row[2]
                     metadata["imported_category"] = category
                     metadata["source"] = "支付宝"
+                    if category == '亲友代付' or '亲情卡' in narration:
+                        tags.add('family-card')
 
                     expense = None
                     # determine direction
