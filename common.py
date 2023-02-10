@@ -4,8 +4,9 @@ import fitz
 
 card_tail_pattern = re.compile('.*银行.*\(([0-9]{4})\)')
 
+
 def match_card_tail(src):
-    assert(type(src) == str)
+    assert (type(src) == str)
     m = card_tail_pattern.match(src)
     return m[1] if m else None
 
@@ -31,18 +32,23 @@ def find_account_by_card_number(config, card_number):
     return None
 
 
-def find_destination_account(config, desc, expense):
-    
-    if desc is not None:
+def find_destination_account(config, desc1, desc2, expense):
+
+    if desc1 is not None:
         for keyword in config['destination_account_mapping']:
-            if keyword in desc:
+            if keyword in desc1:
+                return config['destination_account_mapping'][keyword]
+    if desc2 is not None:
+        for keyword in config['destination_account_mapping']:
+            if keyword in desc2:
                 return config['destination_account_mapping'][keyword]
 
     return config['unknown_expense_account'] if expense else config['unknown_income_account']
 
 
 def my_assert(cond, msg, lineno, row):
-        assert cond, f"{msg} on line {lineno}:\n{row}"
+    assert cond, f"{msg} on line {lineno}:\n{row}"
+
 
 def my_warn(msg, lineno, row):
     print(f"WARNING: {msg} on line {lineno}:\n{row}\n", file=sys.stderr)

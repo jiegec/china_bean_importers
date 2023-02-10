@@ -55,9 +55,8 @@ class Importer(importer.ImporterProtocol):
                     narration = row[8]
 
                     account1 = "Assets:Alipay"
-
-                    account2 = "Expenses:Unknown"
-                    account2 = find_destination_account(self.config, row[7], row[10] == "支出")
+                    account2 = find_destination_account(
+                        self.config, payee, narration, row[10] == "支出")
 
                     if row[10] == "支出":
                         units1 = -units

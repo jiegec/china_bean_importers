@@ -91,7 +91,8 @@ class Importer(importer.ImporterProtocol):
 
                                 metadata = data.new_metadata(file.name, lineno)
                                 account1 = f"Liabilities:Card:BoC:{card_number}"
-                                account2 = find_destination_account(self.config, narration, True)
+                                account2 = find_destination_account(
+                                    self.config, payee, narration, True)
 
                                 if x1 > 500:
                                     # Expenditure

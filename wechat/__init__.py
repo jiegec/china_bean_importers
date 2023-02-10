@@ -71,14 +71,15 @@ class Importer(importer.ImporterProtocol):
                         method = None
                     if '亲属卡交易' in type:
                         tags.add('family-card')
-                    
+
                     # workaround
                     if direction == '/' and type == '信用卡还款':
                         direction = '支出'
                     if (i := narration.find('付款方留言')) != -1:
                         narration = f'{narration[:i]};{narration[i:]}'
 
-                    my_assert(direction in ["收入", "支出"], f"Unknown direction: {direction}", lineno, row)
+                    my_assert(direction in [
+                              "收入", "支出"], f"Unknown direction: {direction}", lineno, row)
                     expense = direction == "支出"
 
                     # determine sign of amount
@@ -88,15 +89,18 @@ class Importer(importer.ImporterProtocol):
                     # determine source account
                     source_config = self.config['source']['wechat']
                     account1 = None
-                    if method == '零钱' or status == '已存入零钱': # 微信零钱
+                    if method == '零钱' or status == '已存入零钱':  # 微信零钱
                         account1 = source_config['account']
-                    elif tail := match_card_tail(method): # cards
-                        account1 = find_account_by_card_number(self.config, tail)
-                        my_assert(account1, f"Unknown card number {tail}", lineno, row)
-    
+                    elif tail := match_card_tail(method):  # cards
+                        account1 = find_account_by_card_number(
+                            self.config, tail)
+                        my_assert(
+                            account1, f"Unknown card number {tail}", lineno, row)
+
                     # TODO: handle 零钱通 account
                     # TODO: handle 数字人民币 account?
-                    my_assert(account1, f"Cannot handle source {method}", lineno, row)
+                    my_assert(
+                        account1, f"Cannot handle source {method}", lineno, row)
 
                     # determine destination account
                     account2 = None
@@ -125,7 +129,8 @@ class Importer(importer.ImporterProtocol):
                         account2 = source_config['transfer_expense_account'] if expense else source_config['transfer_income_account']
                     # 6. find by narration
                     else:
-                        account2 = find_destination_account(self.config, narration, expense)
+                        account2 = find_destination_account(
+                            self.config, payee, narration, expense)
 
                     # check status
                     if status in ['支付成功', '已存入零钱', '已转账', '已收钱']:

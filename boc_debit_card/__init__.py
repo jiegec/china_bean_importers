@@ -26,7 +26,7 @@ def gen_txn(config, file, parts, lineno, card_number, flag, real_name):
     metadata = data.new_metadata(file.name, lineno)
     account1 = find_account_by_card_number(config, card_number)
     my_assert(account1, f"Unknown card number {card_number}", lineno, parts)
-    account2 = find_destination_account(config, narration, True)
+    account2 = find_destination_account(config, payee, narration, True)
 
     # Handle transfer to credit/debit cards
     # parts[9]: 对方账户名

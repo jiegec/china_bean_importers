@@ -7,6 +7,7 @@ import re
 
 from china_bean_importers.common import *
 
+
 class Importer(importer.ImporterProtocol):
     def __init__(self, config) -> None:
         super().__init__()
@@ -18,7 +19,6 @@ class Importer(importer.ImporterProtocol):
                 return "csv" in file.name and "电子客户回单" in f.readline()
         except:
             return False
-        
 
     def file_account(self, file):
         return "alipay_mobile"
@@ -64,7 +64,8 @@ class Importer(importer.ImporterProtocol):
                     date = parse(row[10]).date()
                     units = amount.Amount(D(row[5]), "CNY")
                     metadata["serial"] = row[8]
-                    direction, payee, payee_account, narration, method, _, status, category = row[:8]
+                    direction, payee, payee_account, narration, method, _, status, category = row[
+                        :8]
 
                     # fill metadata
                     if payee_account != '':
@@ -92,33 +93,40 @@ class Importer(importer.ImporterProtocol):
                             if '还款' in narration:
                                 expense = True
                         if payee == '花呗' and '还款' in narration:
-                            expense = False
-                    
-                    my_assert(expense is not None, f"Unknown transaction type", lineno, row)
-                    
+                            expense = True
+
+                    my_assert(expense is not None,
+                              f"Unknown transaction type", lineno, row)
+
                     # determine sign of amount
                     if expense:
                         units = -units
 
                     # find source from 收付款方式
                     source_config = self.config['source']['alipay']
-                    account1 = source_config['account'] # 支付宝余额
+                    account1 = source_config['account']  # 支付宝余额
                     if method == "花呗":
                         account1 = source_config['huabei_account']
                     if method == "余额宝":
                         account1 = source_config['yuebao_account']
                     elif tail := match_card_tail(method):
-                        account1 = find_account_by_card_number(self.config, tail)
-                        my_assert(account1, f"Unknown card number {tail}", lineno, row)
+                        account1 = find_account_by_card_number(
+                            self.config, tail)
+                        my_assert(
+                            account1, f"Unknown card number {tail}", lineno, row)
 
                     # find destination from 商品说明
-                    account2 = find_destination_account(self.config, narration, expense)
+                    account2 = find_destination_account(
+                        self.config, payee, narration, expense)
+                    if payee == '花呗' and '还款' in narration:
+                        account2 = source_config['huabei_account']
 
                     # find from 交易对方
 
                     # check status and add warning if needed
                     if '成功' not in status:
-                        my_warn(f"Transaction not successful, please confirm", lineno, row)
+                        my_warn(
+                            f"Transaction not successful, please confirm", lineno, row)
                         tags.add('confirmation-needed')
 
                     # create transaction

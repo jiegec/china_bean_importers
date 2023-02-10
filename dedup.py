@@ -38,7 +38,8 @@ def find_wechat_family(new_entries_list, existing_entries):
                         narration = f"亲属卡 - 退款 - {entry.narration}"
                         if entry.postings[1].account == "Expenses:Unknown":
                             postings = entry.postings
-                            postings[1] = postings[1]._replace(account = "Expenses:Refund")
+                            postings[1] = postings[1]._replace(
+                                account="Expenses:Refund")
                             entry = entry._replace(postings=postings)
                     else:
                         narration = f"亲属卡 - {entry.narration}"
