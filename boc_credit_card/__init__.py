@@ -6,13 +6,14 @@ from beancount.core import data, amount
 from beancount.core.number import D
 import csv
 import re
-from china_bean_importers.config import *
+from china_bean_importers.common import find_destination_account
 import fitz
 
 
 class Importer(importer.ImporterProtocol):
-    def __init__(self) -> None:
+    def __init__(self, config) -> None:
         super().__init__()
+        self.config = config
 
     def identify(self, file):
         return "PDF" in file.name and "中国银行信用卡" in file.name
@@ -90,10 +91,7 @@ class Importer(importer.ImporterProtocol):
 
                                 metadata = data.new_metadata(file.name, lineno)
                                 account1 = f"Liabilities:Card:BoC:{card_number}"
-                                account2 = "Expenses:Unknown"
-                                for key in expenses:
-                                    if key in narration:
-                                        account2 = expenses[key]
+                                account2 = find_destination_account(self.config, narration, True)
 
                                 if x1 > 500:
                                     # Expenditure
@@ -104,7 +102,7 @@ class Importer(importer.ImporterProtocol):
 
                                 # Assume transfer from the first debit card?
                                 if "Bank of China Mobile Client" in narration and units1.number > 0:
-                                    account2 = f"Assets:Card:BoC:{debit_cards['BoC'][0]}"
+                                    account2 = f"Assets:Card:BoC:{self.config['card_accounts']['Assets:Card']['BoC'][0]}"
                                     # Swap for deduplication
                                     account1, account2 = account2, account1
                                     units1 = -units1

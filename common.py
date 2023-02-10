@@ -21,6 +21,8 @@ def open_pdf(config, name):
 
 
 def find_account_by_card_number(config, card_number):
+    if isinstance(card_number, int):
+        card_number = str(card_number)
     for prefix, accounts in config['card_accounts'].items():
         for bank, numbers in accounts.items():
             if card_number in numbers:
@@ -32,9 +34,9 @@ def find_account_by_card_number(config, card_number):
 def find_destination_account(config, desc, expense):
     
     if desc is not None:
-        for keyword in config['destination_accounts']:
+        for keyword in config['destination_account_mapping']:
             if keyword in desc:
-                return config['destination_accounts'][keyword]
+                return config['destination_account_mapping'][keyword]
 
     return config['unknown_expense_account'] if expense else config['unknown_income_account']
 

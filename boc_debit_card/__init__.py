@@ -24,7 +24,8 @@ def gen_txn(config, file, parts, lineno, card_number, flag, real_name):
     units1 = amount.Amount(D(parts[3]), "CNY")
 
     metadata = data.new_metadata(file.name, lineno)
-    account1 = f"{config.debit_card_prefix}:BoC:{card_number}"
+    account1 = find_account_by_card_number(config, card_number)
+    my_assert(account1, f"Unknown card number {card_number}", lineno, parts)
     account2 = find_destination_account(config, narration, True)
 
     # Handle transfer to credit/debit cards
@@ -32,7 +33,8 @@ def gen_txn(config, file, parts, lineno, card_number, flag, real_name):
     if parts[9] == real_name:
         # parts[10]: 对方卡号/账号
         card_number2 = parts[10][-4:]
-        if new_account := find_account_by_card_number(card_number2) is not None:
+        new_account = find_account_by_card_number(config, card_number2)
+        if new_account is not None:
             account2 = new_account
 
     txn = data.Transaction(
@@ -52,7 +54,7 @@ class Importer(importer.ImporterProtocol):
 
     def identify(self, file):
         if "pdf" in file.name:
-            doc = open_pdf(file.name)
+            doc = open_pdf(self.config, file.name)
             if doc is None:
                 return False
             if "中国银行交易流水明细清单" in doc[0].get_text("text"):
@@ -88,7 +90,7 @@ class Importer(importer.ImporterProtocol):
 
     def extract(self, file, existing_entries=None):
         entries = []
-        doc = open_pdf(file.name)
+        doc = open_pdf(self.config, file.name)
         if doc is None:
             return entries
 

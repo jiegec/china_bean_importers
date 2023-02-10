@@ -91,6 +91,8 @@ class Importer(importer.ImporterProtocol):
                         if method == '花呗':
                             if '还款' in narration:
                                 expense = True
+                        if payee == '花呗' and '还款' in narration:
+                            expense = False
                     
                     my_assert(expense is not None, f"Unknown transaction type", lineno, row)
                     
