@@ -62,7 +62,7 @@ class Importer(importer.ImporterProtocol):
                     # fill metadata
                     metadata["source"] = "微信支付"
                     metadata["imported_category"] = type
-                    metadata["serial"] = serial
+                    metadata["serial"] = serial.strip()
                     if payee == '/':
                         payee = None
                     if narration == '/':
@@ -114,6 +114,9 @@ class Importer(importer.ImporterProtocol):
                         account2 = source_config['red_packet_expense_account']
                         if payee[0:2] == "发给":
                             payee = payee[2:]
+                    elif not expense and "微信红包-退款" in type:
+                        narration = "发微信红包-退款"
+                        account2 = source_config['red_packet_expense_account']
                     # 3. family card
                     elif "亲属卡交易" == type:
                         account2 = source_config['family_card_expense_account']
