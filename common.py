@@ -1,15 +1,13 @@
 import re
 import sys
 import typing
-from dataclasses import dataclass
 
 import fitz
 
 card_tail_pattern = re.compile('.*银行.*\(([0-9]{4})\)')
 
 
-@dataclass
-class BillDetailMapping:
+class BillDetailMapping(typing.NamedTuple):
     # used to match an item's narration
     narration_keywords: tuple[str]
     # used to match an item's payee
@@ -29,6 +27,7 @@ class BillDetailMapping:
         if payee is not None:
             for keyword in self.payee_keywords:
                 if keyword in payee:
+                    print(self, file=sys.stderr)
                     return self.destination_account, self.additional_metadata
         return None
 

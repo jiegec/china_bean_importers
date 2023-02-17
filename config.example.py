@@ -45,6 +45,6 @@ config = {
 
     'detail_mappings': [
         BDM(('京东',), (), 'Expenses:JD', {'platform': '京东'}),
-        BDM((), ('饿了么'), 'Expenses:Food:Delivery', {'platform': '饿了么'}),
+        BDM((), ('饿了么',), 'Expenses:Food:Delivery', {'platform': '饿了么'}),
     ],
 }
