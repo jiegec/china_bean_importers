@@ -6,7 +6,7 @@ from beancount.core import data, amount
 from beancount.core.number import D
 import csv
 import re
-from china_bean_importers.common import find_destination_account
+from china_bean_importers.common import match_destination_and_metadata, unknown_account
 import fitz
 
 
@@ -91,15 +91,22 @@ class Importer(importer.ImporterProtocol):
 
                                 metadata = data.new_metadata(file.name, lineno)
                                 account1 = f"Liabilities:Card:BoC:{card_number}"
-                                account2 = find_destination_account(
-                                    self.config, payee, narration, True)
 
                                 if x1 > 500:
                                     # Expenditure
                                     units1 = -units
+                                    expense = True
                                 else:
                                     # Deposit
                                     units1 = units
+                                    expense = False
+
+                                if m := match_destination_and_metadata(self.config, narration, payee):
+                                    (account2, new_meta) = m
+                                    metadata.update(new_meta)
+                                else:
+                                    account2 = unknown_account(
+                                        self.config, expense)
 
                                 # Assume transfer from the first debit card?
                                 if "Bank of China Mobile Client" in narration and units1.number > 0:
