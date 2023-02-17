@@ -27,7 +27,6 @@ class BillDetailMapping(typing.NamedTuple):
         if payee is not None:
             for keyword in self.payee_keywords:
                 if keyword in payee:
-                    print(self, file=sys.stderr)
                     return self.destination_account, self.additional_metadata
         return None
 
