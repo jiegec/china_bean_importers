@@ -1,5 +1,7 @@
 # Copy this file to china_bean_importer_config.py and place along side your import config
 
+from china_bean_importers.common import BillDetailMapping as BDM
+
 config = {
 
     'importers': {
