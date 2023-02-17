@@ -44,6 +44,7 @@ class Importer(importer.ImporterProtocol):
         begin = False
         with open(file.name, 'r') as f:
             for lineno, row in enumerate(csv.reader(f)):
+                row = [col.strip() for col in row]
                 #    0        1        2     3     4     5      6        7       8        9     10
                 # 交易时间, 交易类型, 交易对方, 商品, 收/支, 金额, 支付方式, 当前状态, 交易单号, 商户单号, 备注
                 if row[0] == "交易时间" and row[1] == "交易类型":
@@ -51,18 +52,19 @@ class Importer(importer.ImporterProtocol):
                     begin = True
                 elif begin:
                     # parse data line
-                    metadata = data.new_metadata(file.name, lineno)
+                    metadata: dict = data.new_metadata(file.name, lineno)
                     tags = set()
 
                     # parse some basic info
-                    date = parse(row[0]).date()
+                    time = parse(row[0])
                     units = amount.Amount(D(row[5][1:]), "CNY")
                     _, type, payee, narration, direction, _, method, status, serial, _, note = row
 
                     # fill metadata
-                    metadata["source"] = "微信支付"
+                    metadata["payment_method"] = "微信支付"
                     metadata["imported_category"] = type
                     metadata["serial"] = serial.strip()
+                    metadata["time"] = time.time().isoformat()
                     if payee == '/':
                         payee = None
                     if narration == '/':
@@ -87,7 +89,7 @@ class Importer(importer.ImporterProtocol):
                         units = -units
 
                     # determine source account
-                    source_config = self.config['source']['wechat']
+                    source_config = self.config['importers']['wechat']
                     account1 = None
                     if method == '零钱' or status == '已存入零钱':  # 微信零钱
                         account1 = source_config['account']
@@ -130,10 +132,12 @@ class Importer(importer.ImporterProtocol):
                     # 5. transfer
                     elif "转账" == type:
                         account2 = source_config['transfer_expense_account'] if expense else source_config['transfer_income_account']
-                    # 6. find by narration
+                    # 6. find by narration and payee
+                    elif m := match_destination_and_metadata(self.config, narration, payee):
+                        (account2, new_meta) = m
+                        metadata.update(new_meta)
                     else:
-                        account2 = find_destination_account(
-                            self.config, payee, narration, expense)
+                        account2 = unknown_account(self.config, expense)
 
                     # check status
                     if status in ['支付成功', '已存入零钱', '已转账', '已收钱']:
@@ -146,7 +150,7 @@ class Importer(importer.ImporterProtocol):
 
                     # create transaction
                     txn = data.Transaction(
-                        meta=metadata, date=date, flag=self.FLAG, payee=payee, narration=narration, tags=tags, links=data.EMPTY_SET, postings=[
+                        meta=metadata, date=time.date(), flag=self.FLAG, payee=payee, narration=narration, tags=tags, links=data.EMPTY_SET, postings=[
                             data.Posting(account=account1, units=units,
                                          cost=None, price=None, flag=None, meta=None),
                             data.Posting(account=account2, units=None,

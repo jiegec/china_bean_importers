@@ -2,11 +2,14 @@
 
 config = {
 
-    'source': {
+    'importers': {
         'alipay': {
             "account": "Assets:Alipay",
             "huabei_account": "Liabilities:Alipay:HuaBei",
             "yuebao_account": "Assets:Alipay:YueBao",
+            "category_mapping": {
+                "交通出行": "Expenses:Travel",
+            }
         },
         'wechat': {
             "account": "Assets:WeChat",
@@ -38,16 +41,8 @@ config = {
     'unknown_expense_account': 'Expenses:Unknown',
     'unknown_income_account': 'Income:Unknown',
 
-    'destination_account_mapping': {
-        # expenses
-        "京东": "Expenses:JD",
-        "中铁网络": "Expenses:Travel:Train",
-        "AWS": "Expenses:Cloud:AWS",
-        "AmazonWebServices": "Expenses:Cloud:AWS",
-        "App Store": "Expenses:Apple:AppStore",
-        "AppleCare": "Expenses:Apple:AppleCare",
-        "iCloud": "Expenses:Apple:ICloud",
-        # income
-        "工资": "Income:Company"
-    },
+    'detail_mappings': [
+        BDM(('京东',), (), 'Expenses:JD', {'platform': '京东'}),
+        BDM((), ('饿了么'), 'Expenses:Food:Delivery', {'platform': '饿了么'}),
+    ],
 }

@@ -57,11 +57,11 @@ class Importer(importer.ImporterProtocol):
                     break
                 elif begin:
                     # parse data line
-                    metadata = data.new_metadata(file.name, lineno)
+                    metadata: dict = data.new_metadata(file.name, lineno)
                     tags = set()
 
                     # parse some basic info
-                    date = parse(row[10]).date()
+                    time = parse(row[10])
                     units = amount.Amount(D(row[5]), "CNY")
                     metadata["serial"] = row[8]
                     direction, payee, payee_account, narration, method, _, status, category = row[
@@ -71,7 +71,8 @@ class Importer(importer.ImporterProtocol):
                     if payee_account != '':
                         metadata["payee_account"] = row[2]
                     metadata["imported_category"] = category
-                    metadata["source"] = "支付宝"
+                    metadata["payment_method"] = "支付宝"
+                    metadata["time"] = time.time().isoformat()
                     if category == '亲友代付' or '亲情卡' in narration:
                         tags.add('family-card')
 
@@ -103,8 +104,8 @@ class Importer(importer.ImporterProtocol):
                         units = -units
 
                     # find source from 收付款方式
-                    source_config = self.config['source']['alipay']
-                    account1 = source_config['account']  # 支付宝余额
+                    source_config = self.config['importers']['alipay']
+                    account1 = source_config['account'] # 支付宝余额
                     if method == "花呗":
                         account1 = source_config['huabei_account']
                     if method == "余额宝":
@@ -115,13 +116,15 @@ class Importer(importer.ImporterProtocol):
                         my_assert(
                             account1, f"Unknown card number {tail}", lineno, row)
 
-                    # find destination from 商品说明
-                    account2 = find_destination_account(
-                        self.config, payee, narration, expense)
-                    if payee == '花呗' and '还款' in narration:
-                        account2 = source_config['huabei_account']
-
-                    # find from 交易对方
+                    # find from 商品说明 and 交易对方
+                    if m := match_destination_and_metadata(self.config, narration, payee):
+                        (account2, new_meta) = m
+                        metadata.update(new_meta)
+                    # then try category
+                    elif category in source_config['category_mapping']:
+                        account2 = source_config['category_mapping'][category]
+                    else:
+                        account2 = unknown_account(self.config, expense)
 
                     # check status and add warning if needed
                     if '成功' not in status:
@@ -131,7 +134,7 @@ class Importer(importer.ImporterProtocol):
 
                     # create transaction
                     txn = data.Transaction(
-                        meta=metadata, date=date, flag=self.FLAG, payee=payee, narration=narration, tags=tags, links=data.EMPTY_SET, postings=[
+                        meta=metadata, date=time.date(), flag=self.FLAG, payee=payee, narration=narration, tags=tags, links=data.EMPTY_SET, postings=[
                             data.Posting(account=account1, units=units,
                                          cost=None, price=None, flag=None, meta=None),
                             data.Posting(account=account2, units=None,
