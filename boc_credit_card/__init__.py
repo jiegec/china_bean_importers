@@ -90,6 +90,7 @@ class Importer(importer.ImporterProtocol):
                                 units = amount.Amount(D(value), currency)
 
                                 metadata = data.new_metadata(file.name, lineno)
+                                tags = set()
                                 account1 = f"Liabilities:Card:BoC:{card_number}"
 
                                 if x1 > 500:
@@ -101,10 +102,11 @@ class Importer(importer.ImporterProtocol):
                                     units1 = units
                                     expense = False
 
-                                if m := match_destination_and_metadata(self.config, narration, payee):
-                                    (account2, new_meta) = m
+                                if m := match_destination_and_metadata(config, narration, payee):
+                                    (account2, new_meta, new_tags) = m
                                     metadata.update(new_meta)
-                                else:
+                                    tags = tags.union(new_tags)
+                                if account2 is None:
                                     account2 = unknown_account(
                                         self.config, expense)
 

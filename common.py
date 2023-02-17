@@ -14,20 +14,22 @@ class BillDetailMapping(typing.NamedTuple):
     payee_keywords: tuple[str]
     # destination found
     destination_account: str
+    # tags to append in bill item
+    additional_tags: tuple[str]
     # other metadata to append in bill
     additional_metadata: dict[str, object]
 
-    def match(self, desc: str, payee: str) -> typing.Optional[tuple[str, dict[str, object]]]:
+    def match(self, desc: str, payee: str) -> typing.Optional[tuple[str, dict[str, object], tuple[str]]]:
         # match narration first
         if desc is not None:
             for keyword in self.narration_keywords:
                 if keyword in desc:
-                    return self.destination_account, self.additional_metadata
+                    return self.destination_account, self.additional_metadata, self.additional_tags
         # then try payee
         if payee is not None:
             for keyword in self.payee_keywords:
                 if keyword in payee:
-                    return self.destination_account, self.additional_metadata
+                    return self.destination_account, self.additional_metadata, self.additional_tags
         return None
 
 

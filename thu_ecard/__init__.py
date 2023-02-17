@@ -64,8 +64,13 @@ class Importer(CsvImporter):
             account1 = source_config['account']
             account2 = unknown_account(self.config, expense)
             if m := match_destination_and_metadata(self.config, type, payee):
-                    (account2, new_meta) = m
-                    metadata.update(new_meta)
+                    (new_account, new_meta, new_tags) = m
+                    if new_account:
+                        account2 = new_account
+                    if new_meta:
+                        metadata.update(new_meta)
+                    if new_tags:
+                        tags = tags.union(new_tags)
             
             # TODO: obtain a mapping from terminal no. to location?
 

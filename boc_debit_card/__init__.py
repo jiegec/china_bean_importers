@@ -24,13 +24,15 @@ def gen_txn(config, file, parts, lineno, card_number, flag, real_name):
     units1 = amount.Amount(D(parts[3]), "CNY")
 
     metadata = data.new_metadata(file.name, lineno)
+    tags = set()
     account1 = find_account_by_card_number(config, card_number)
     my_assert(account1, f"Unknown card number {card_number}", lineno, parts)
 
     if m := match_destination_and_metadata(config, narration, payee):
-        (account2, new_meta) = m
+        (account2, new_meta, new_tags) = m
         metadata.update(new_meta)
-    else:
+        tags = tags.union(new_tags)
+    if account2 is None:
         account2 = unknown_account(
             config, True)
 

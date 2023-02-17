@@ -97,11 +97,17 @@ class Importer(CsvImporter):
                         account1, f"Unknown card number {tail}", lineno, row)
 
                 # find from 商品说明 and 交易对方
+                account2 = None
                 if m := match_destination_and_metadata(self.config, narration, payee):
-                    (account2, new_meta) = m
-                    metadata.update(new_meta)
+                    (new_account, new_meta, new_tags) = m
+                    if new_account:
+                        account2 = new_account
+                    if new_meta:
+                        metadata.update(new_meta)
+                    if new_tags:
+                        tags = tags.union(new_tags)
                 # then try category
-                elif category in source_config['category_mapping']:
+                if account2 is None and category in source_config['category_mapping']:
                     account2 = source_config['category_mapping'][category]
                 else:
                     account2 = unknown_account(self.config, expense)

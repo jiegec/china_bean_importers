@@ -47,7 +47,8 @@ config = {
     'unknown_income_account': 'Income:Unknown',
 
     'detail_mappings': [
-        BDM(('京东',), (), 'Expenses:JD', {'platform': '京东'}),
-        BDM((), ('饿了么',), 'Expenses:Food:Delivery', {'platform': '饿了么'}),
+        BDM(('京东',), (), 'Expenses:JD', (), {'platform': '京东'}),
+        BDM((), ('饿了么',), 'Expenses:Food:Delivery', (), {'platform': '饿了么'}),
+        BDM((), ('万龙运动旅游',), None, ('ski',), {}),
     ],
 }
