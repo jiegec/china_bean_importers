@@ -23,7 +23,10 @@ config = {
             "group_payment_income_account": "Income:WeChat:Group",
             "transfer_expense_account": "Expenses:WeChat:Transfer",
             "transfer_income_account": "Income:WeChat:Transfer",
-        }
+        },
+        'thu_ecard': {
+            "account": "Assets:Card:THU",
+        },
     },
 
     'card_accounts': {

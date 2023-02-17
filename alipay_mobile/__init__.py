@@ -1,5 +1,4 @@
 from dateutil.parser import parse
-from beancount.ingest import importer
 from beancount.core import data, amount
 from beancount.core.number import D
 import csv
@@ -9,19 +8,18 @@ from china_bean_importers.common import *
 from china_bean_importers.importer import CsvImporter
 
 class Importer(CsvImporter):
+
     def __init__(self, config) -> None:
         super().__init__(config)
         self.encoding = 'gbk'
         self.title_keyword = '电子客户回单'
+        self.file_account_name = 'alipay_mobile'
 
     def parse_metadata(self):
         if m := re.search('起始时间：\[([0-9 :-]+)\]', self.full_content):
             self.start = parse(m[1])
         if m := re.search('终止时间：\[([0-9 :-]+)\]', self.full_content):
             self.end = parse(m[1])
-
-    def file_account(self, file):
-        return "alipay_mobile"
 
     def extract(self, file, existing_entries=None):
         entries = []

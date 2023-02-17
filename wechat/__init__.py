@@ -1,5 +1,4 @@
 from dateutil.parser import parse
-from beancount.ingest import importer
 from beancount.core import data, amount
 from beancount.core.number import D
 import csv
@@ -10,9 +9,11 @@ from china_bean_importers.importer import CsvImporter
 
 
 class Importer(CsvImporter):
+
     def __init__(self, config) -> None:
         super().__init__(config)
         self.title_keyword = '微信支付账单明细'
+        self.file_account_name = 'wechat'
 
     def parse_metadata(self):
         if m := re.search('起始时间：\[([0-9]+-[0-9]+-[0-9]+)', self.full_content):

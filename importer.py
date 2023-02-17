@@ -8,6 +8,7 @@ class CsvImporter(importer.ImporterProtocol):
         super().__init__()
         self.config: dict = config
         self.encoding: str = 'utf-8'
+        self.file_account_name: str = None
         self.title_keyword: str = None
         self.full_content: str = ''
         self.content: list[str] = []
@@ -31,7 +32,9 @@ class CsvImporter(importer.ImporterProtocol):
         raise 'Unimplemented'
 
     def file_account(self, file):
-        raise 'Unimplemented'
+        if self.file_account_name is None:
+            raise 'file_account_name not set'
+        return self.file_account_name
 
     def file_date(self, file):
         return self.start
