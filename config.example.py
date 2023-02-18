@@ -9,6 +9,8 @@ config = {
             "account": "Assets:Alipay",
             "huabei_account": "Liabilities:Alipay:HuaBei",
             "yuebao_account": "Assets:Alipay:YueBao",
+            "red_packet_income_account": "Income:Alipay:RedPacket",
+            "red_packet_expense_account": "Expenses:Alipay:RedPacket",
             "category_mapping": {
                 "交通出行": "Expenses:Travel",
             }
@@ -47,8 +49,8 @@ config = {
     'unknown_income_account': 'Income:Unknown',
 
     'detail_mappings': [
-        BDM(('京东',), (), 'Expenses:JD', (), {'platform': '京东'}),
-        BDM((), ('饿了么',), 'Expenses:Food:Delivery', (), {'platform': '饿了么'}),
-        BDM((), ('万龙运动旅游',), None, ('ski',), {}),
+        BDM(['京东'], [], 'Expenses:JD', [], {'platform': '京东'}),
+        BDM([], ['饿了么'], 'Expenses:Food:Delivery', [], {'platform': '饿了么'}),
+        BDM([], ['万龙运动旅游'], None, ['ski'], {}),
     ],
 }

@@ -115,14 +115,11 @@ class Importer(CsvImporter):
                 elif "转账" == type:
                     account2 = source_config['transfer_expense_account'] if expense else source_config['transfer_income_account']
                 # 6. find by narration and payee
-                elif m := match_destination_and_metadata(self.config, narration, payee):
-                    (new_account, new_meta, new_tags) = m
-                    if new_account:
-                        account2 = new_account
-                    if new_meta:
-                        metadata.update(new_meta)
-                    if new_tags:
-                        tags = tags.union(new_tags)
+                new_account, new_meta, new_tags = match_destination_and_metadata(self.config, narration, payee)
+                if new_account:
+                    account2 = new_account
+                metadata.update(new_meta)
+                tags = tags.union(new_tags)
                 # fallback
                 if account2 is None:
                     account2 = unknown_account(self.config, expense)

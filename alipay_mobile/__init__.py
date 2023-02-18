@@ -84,6 +84,7 @@ class Importer(CsvImporter):
                     units = -units
 
                 # find source from 收付款方式
+                # TODO: handle 红包 & 余额宝转入
                 source_config = self.config['importers']['alipay']
                 account1 = source_config['account'] # 支付宝余额
                 if method == "花呗":
@@ -98,19 +99,22 @@ class Importer(CsvImporter):
 
                 # find from 商品说明 and 交易对方
                 account2 = None
-                if m := match_destination_and_metadata(self.config, narration, payee):
-                    (new_account, new_meta, new_tags) = m
+                if payee == "余额宝" and "自动转入" in narration:
+                    account2 = source_config['yuebao_account']
+                elif category == "转账红包":
+                    account2 = source_config['red_packet_income_account'] if not expense else source_config['red_packet_expense_account']
+                else:
+                    new_account, new_meta, new_tags = match_destination_and_metadata(self.config, narration, payee)
                     if new_account:
                         account2 = new_account
-                    if new_meta:
-                        metadata.update(new_meta)
-                    if new_tags:
-                        tags = tags.union(new_tags)
+                    metadata.update(new_meta)
+                    tags = tags.union(new_tags)
                 # then try category
-                if account2 is None and category in source_config['category_mapping']:
-                    account2 = source_config['category_mapping'][category]
-                else:
-                    account2 = unknown_account(self.config, expense)
+                if account2 is None:
+                    if category in source_config['category_mapping']:
+                        account2 = source_config['category_mapping'][category]
+                    else:
+                        account2 = unknown_account(self.config, expense)
 
                 # check status and add warning if needed
                 if '成功' not in status:

@@ -1,6 +1,7 @@
 import re
 import sys
 import typing
+import copy
 
 import fitz
 
@@ -9,28 +10,33 @@ card_tail_pattern = re.compile('.*银行.*\(([0-9]{4})\)')
 
 class BillDetailMapping(typing.NamedTuple):
     # used to match an item's narration
-    narration_keywords: tuple[str]
+    narration_keywords: typing.Optional[list[str]] = None
     # used to match an item's payee
-    payee_keywords: tuple[str]
-    # destination found
-    destination_account: str
+    payee_keywords: typing.Optional[list[str]] = None
+    # destination account (None means not specified)
+    destination_account: typing.Optional[str] = None
     # tags to append in bill item
-    additional_tags: tuple[str]
+    additional_tags: typing.Optional[list[str]] = None
     # other metadata to append in bill
-    additional_metadata: dict[str, object]
+    additional_metadata: typing.Optional[dict[str, object]] = None
 
-    def match(self, desc: str, payee: str) -> typing.Optional[tuple[str, dict[str, object], tuple[str]]]:
+    def canonicalize(self):
+        tags = set(self.additional_tags) if self.additional_tags else set()
+        metadata = self.additional_metadata.copy() if self.additional_metadata else {}
+        return self.destination_account, metadata, tags
+
+    def match(self, desc: str, payee: str) -> tuple[typing.Optional[str], dict[str, object], set[str]]:
         # match narration first
-        if desc is not None:
+        if desc is not None and self.narration_keywords is not None:
             for keyword in self.narration_keywords:
                 if keyword in desc:
-                    return self.destination_account, self.additional_metadata, self.additional_tags
+                    return self.canonicalize()
         # then try payee
-        if payee is not None:
+        if payee is not None and self.payee_keywords is not None:
             for keyword in self.payee_keywords:
                 if keyword in payee:
-                    return self.destination_account, self.additional_metadata, self.additional_tags
-        return None
+                    return self.canonicalize()
+        return None, {}, set()
 
 
 def match_card_tail(src):
@@ -62,11 +68,33 @@ def find_account_by_card_number(config, card_number):
 
 def match_destination_and_metadata(config, desc, payee):
     
+    account = None
+    mapping = None
+    metadata = {}
+    tags = set()
+
+    # merge all possible results
     for m in config['detail_mappings']:
-        mapping: BillDetailMapping = m
-        if dest := mapping.match(desc, payee):
-            return dest
-    return None
+        _mapping: BillDetailMapping = m
+        new_account, new_metadata, new_tags = _mapping.match(desc, payee)
+        # check compatibility
+        if account is None:
+            account, mapping = new_account, m
+        elif new_account is not None:
+            if new_account.startswith(account):
+                # new account is deeper than or equal to current account
+                account, mapping = new_account, m
+            else:
+                assert account.startswith(new_account), f"""Conflict destination accounts found for narration {desc} and payee {payee}:
+Old account {account} from {mapping}
+New account {new_account} from {m}
+
+"""
+
+        metadata.update(new_metadata)
+        tags.update(new_tags)
+
+    return account, metadata, tags
 
 
 def unknown_account(config, expense) -> str:
