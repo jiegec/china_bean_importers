@@ -8,22 +8,34 @@ from china_bean_importers.common import *
 
 
 def gen_txn(config, file, parts, lineno, card_number, flag, real_name):
-    # print(parts)
-    assert len(parts) == 12
+
+    my_assert(len(parts) == 12, f'Cannot parse line in PDF', lineno, parts)
+    # print(parts, file=sys.stderr)
+    #    0       1       2    3    4      5      6      7      8       9          10         11
+    # 记账日期, 记账时间, 币别, 金额, 余额, 交易名称, 渠道, 网点名称, 附言, 对方账户名, 对方卡号/账号, 对方开户行
 
     # parts[9]: 对方账户名
     payee = parts[9]
     # parts[8]: 附言
-    narration = parts[8]
-    if '------' in narration:
-        # parts[5]: 交易名称
-        narration = parts[5]
+    narration = parts[5] if '------' in parts[8] else parts[8]
     # parts[0]: 记账日期
     date = parse(parts[0]).date()
+    # parts[2]: 币别
+    my_assert(parts[2] == "人民币", f"Cannot handle non-CNY currency {parts[2]} currently", lineno, parts)
     # parts[3]: 金额
     units1 = amount.Amount(D(parts[3]), "CNY")
 
     metadata = data.new_metadata(file.name, lineno)
+    metadata["imported_category"] = parts[5]
+    metadata["source"] = parts[6]
+    metadata["time"] = parts[1]
+    if '------' not in parts[7]:
+        metadata["branch_name"] = parts[7]
+    if '------' not in parts[10]:
+        metadata["payee_account"] = parts[10] 
+    if '------' not in parts[11]:
+        metadata["payee_branch"] = parts[11]
+
     tags = set()
     account1 = find_account_by_card_number(config, card_number)
     my_assert(account1, f"Unknown card number {card_number}", lineno, parts)
@@ -33,20 +45,25 @@ def gen_txn(config, file, parts, lineno, card_number, flag, real_name):
         metadata.update(new_meta)
         tags = tags.union(new_tags)
     if account2 is None:
-        account2 = unknown_account(
-            config, True)
+        account2 = unknown_account(config, True)
 
     # Handle transfer to credit/debit cards
     # parts[9]: 对方账户名
-    if parts[9] == real_name:
+    if payee == real_name:
         # parts[10]: 对方卡号/账号
         card_number2 = parts[10][-4:]
         new_account = find_account_by_card_number(config, card_number2)
         if new_account is not None:
             account2 = new_account
-
+    
+    if '网上快捷' in parts[5]:
+        if '支付宝' in narration or '财付通' in narration:
+            tags.add('maybe-duplicate')
+    if '退款' in parts[5]:
+        tags.add('refund')
+ 
     txn = data.Transaction(
-        meta=metadata, date=date, flag=flag, payee=payee, narration=narration, tags=data.EMPTY_SET, links=data.EMPTY_SET, postings=[
+        meta=metadata, date=date, flag=flag, payee=payee, narration=narration, tags=tags, links=data.EMPTY_SET, postings=[
             data.Posting(account=account1, units=units1,
                          cost=None, price=None, flag=None, meta=None),
             data.Posting(account=account2, units=None,
@@ -116,7 +133,6 @@ class Importer(importer.ImporterProtocol):
             columns = [46, 112, 172, 234, 300,
                        339, 405, 447, 518, 590, 660, 740]
             for (x0, y0, x1, y1, content, block_no, line_no, word_no) in text:
-                # print(x0, y0, x1, y1, repr(content), block_no, line_no, word_no)
                 lineno += 1
                 content = content.strip()
 
