@@ -15,7 +15,7 @@ def gen_txn(config, file, parts, lineno, card_number, flag, real_name):
     # 记账日期, 记账时间, 币别, 金额, 余额, 交易名称, 渠道, 网点名称, 附言, 对方账户名, 对方卡号/账号, 对方开户行
 
     # parts[9]: 对方账户名
-    payee = parts[9]
+    payee = parts[9] if '------' not in parts[9] else 'Unknown'
     # parts[8]: 附言
     narration = parts[5] if '------' in parts[8] else parts[8]
     # parts[0]: 记账日期
@@ -45,7 +45,7 @@ def gen_txn(config, file, parts, lineno, card_number, flag, real_name):
         metadata.update(new_meta)
         tags = tags.union(new_tags)
     if account2 is None:
-        account2 = unknown_account(config, True)
+        account2 = unknown_account(config, units1.number < 0)
 
     # Handle transfer to credit/debit cards
     # parts[9]: 对方账户名
@@ -131,8 +131,9 @@ class Importer(importer.ImporterProtocol):
             last_y0 = 0
             # y position of columns
             columns = [46, 112, 172, 234, 300,
-                       339, 405, 447, 518, 590, 660, 740]
+                       339, 405, 445, 518, 590, 660, 740]
             for (x0, y0, x1, y1, content, block_no, line_no, word_no) in text:
+                # print(f'{x0} {y0} {content}\n', file=sys.stderr)
                 lineno += 1
                 content = content.strip()
 
