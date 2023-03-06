@@ -4,10 +4,10 @@ import sys
 from beancount.ingest import importer
 from beancount.core import data, amount
 from beancount.core.number import D
-import csv
 import re
-from china_bean_importers.common import match_destination_and_metadata, unknown_account
-import fitz
+
+
+from china_bean_importers.common import *
 
 
 class Importer(importer.ImporterProtocol):
@@ -16,7 +16,7 @@ class Importer(importer.ImporterProtocol):
         self.config = config
 
     def identify(self, file):
-        return "PDF" in file.name and "中国银行信用卡" in file.name
+        return "PDF" in file.name.upper() and "中国银行信用卡" in file.name
 
     def file_account(self, file):
         return "boc_credit_card"
@@ -78,9 +78,11 @@ class Importer(importer.ImporterProtocol):
                             done = False
                             if x1 > 500:
                                 # Expenditure found
+                                expense = True
                                 done = True
                             elif x1 > 400:
                                 # Deposit found
+                                expense = False
                                 done = True
                             if done:
                                 payee = None
@@ -91,18 +93,17 @@ class Importer(importer.ImporterProtocol):
 
                                 metadata = data.new_metadata(file.name, lineno)
                                 tags = set()
-                                account1 = f"Liabilities:Card:BoC:{card_number}"
+                                account1 = find_account_by_card_number(self.config, card_number)
 
-                                if x1 > 500:
-                                    # Expenditure
+                                for b in self.config['importers']['card_narration_blacklist']:
+                                    if b in narration:
+                                        print(f"Item skipped due to blacklist: {narration} [{units}]", file=sys.stderr)
+                                        continue
+
+                                if expense:
                                     units1 = -units
-                                    expense = True
-                                else:
-                                    # Deposit
-                                    units1 = units
-                                    expense = False
 
-                                if m := match_destination_and_metadata(config, narration, payee):
+                                if m := match_destination_and_metadata(self.config, narration, payee):
                                     (account2, new_meta, new_tags) = m
                                     metadata.update(new_meta)
                                     tags = tags.union(new_tags)
@@ -110,12 +111,14 @@ class Importer(importer.ImporterProtocol):
                                     account2 = unknown_account(
                                         self.config, expense)
 
+                                if '授权批准' in narration: # 还款
+                                    tags.add('maybe-repayment')
                                 # Assume transfer from the first debit card?
-                                if "Bank of China Mobile Client" in narration and units1.number > 0:
-                                    account2 = f"Assets:Card:BoC:{self.config['card_accounts']['Assets:Card']['BoC'][0]}"
-                                    # Swap for deduplication
-                                    account1, account2 = account2, account1
-                                    units1 = -units1
+                                # if "Bank of China Mobile Client" in narration and units1.number > 0:
+                                #     account2 = f"Assets:Card:BoC:{self.config['card_accounts']['Assets:Card']['BoC'][0]}"
+                                #     # Swap for deduplication
+                                #     account1, account2 = account2, account1
+                                #     units1 = -units1
 
                                 txn = data.Transaction(
                                     meta=metadata, date=date, flag=self.FLAG, payee=payee, narration=narration, tags=data.EMPTY_SET, links=data.EMPTY_SET, postings=[

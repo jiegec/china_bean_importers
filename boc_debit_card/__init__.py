@@ -25,6 +25,11 @@ def gen_txn(config, file, parts, lineno, card_number, flag, real_name):
     # parts[3]: 金额
     units1 = amount.Amount(D(parts[3]), "CNY")
 
+    for b in config['importers']['card_narration_blacklist']:
+        if b in narration:
+            print(f"Item skipped due to blacklist: {narration}  [{units1}]", file=sys.stderr)
+            continue
+
     metadata = data.new_metadata(file.name, lineno)
     metadata["imported_category"] = parts[5]
     metadata["source"] = parts[6]
@@ -56,9 +61,6 @@ def gen_txn(config, file, parts, lineno, card_number, flag, real_name):
         if new_account is not None:
             account2 = new_account
     
-    if '网上快捷' in parts[5]:
-        if '支付宝' in narration or '财付通' in narration:
-            tags.add('maybe-duplicate')
     if '退款' in parts[5]:
         tags.add('refund')
  
