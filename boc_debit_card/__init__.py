@@ -25,10 +25,18 @@ def gen_txn(config, file, parts, lineno, card_number, flag, real_name):
     # parts[3]: 金额
     units1 = amount.Amount(D(parts[3]), "CNY")
 
+    skip = False
     for b in config['importers']['card_narration_blacklist']:
         if b in narration:
-            print(f"Item skipped due to blacklist: {narration}  [{units1}]", file=sys.stderr)
-            continue
+            print(f"Item in blacklist: {parts[7:10]} {date} {narration}  [{units1}] --- ", file=sys.stderr, end='')
+            if units1 < amount.Amount(D(0), "CNY"):
+                print(f"Expense skipped", file=sys.stderr)
+                skip = True
+            else:
+                print(f"Income kept in record", file=sys.stderr)
+            break
+    if skip:
+        return None
 
     metadata = data.new_metadata(file.name, lineno)
     metadata["imported_category"] = parts[5]
@@ -131,9 +139,9 @@ class Importer(importer.ImporterProtocol):
             page = doc[i]
             text = page.get_text("words")
             last_y0 = 0
-            # y position of columns
+            # x offset of columns
             columns = [46, 112, 172, 234, 300,
-                       339, 405, 445, 518, 590, 660, 740]
+                       339, 405, 445, 517, 590, 660, 740]
             for (x0, y0, x1, y1, content, block_no, line_no, word_no) in text:
                 # print(f'{x0} {y0} {content}\n', file=sys.stderr)
                 lineno += 1
@@ -167,6 +175,7 @@ class Importer(importer.ImporterProtocol):
                             # date
                             parts.append(content)
                         else:
+                            # print(f"{x0} {content}", file=sys.stderr)
                             if len(parts) < len(columns) and x0 >= columns[len(parts)]:
                                 # new column
                                 parts.append(content)
@@ -184,4 +193,4 @@ class Importer(importer.ImporterProtocol):
                               card_number, self.FLAG, real_name)
                 entries.append(txn)
                 parts = []
-        return entries
+        return list(filter(lambda e: e is not None, entries))

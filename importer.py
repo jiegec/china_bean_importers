@@ -22,7 +22,7 @@ class CsvImporter(importer.ImporterProtocol):
             with open(file.name, 'r', encoding=self.encoding) as f:
                 full_content = f.read()
                 self.content = full_content.splitlines()
-                if "csv" in file.name and self.title_keyword in self.content[0]:
+                if "csv" in file.name and self.title_keyword in full_content:
                     self.parse_metadata()
                     return True
         except:

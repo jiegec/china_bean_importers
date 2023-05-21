@@ -7,6 +7,7 @@ import fitz
 
 card_tail_pattern = re.compile('.*银行.*\(([0-9]{4})\)')
 
+SAME_AS_NARRATION = object()
 
 class BillDetailMapping(typing.NamedTuple):
     # used to match an item's narration
@@ -33,7 +34,8 @@ class BillDetailMapping(typing.NamedTuple):
                     return self.canonicalize()
         # then try payee
         if payee is not None and self.payee_keywords is not None:
-            for keyword in self.payee_keywords:
+            keywords = self.narration_keywords if self.payee_keywords is SAME_AS_NARRATION else self.payee_keywords
+            for keyword in keywords:
                 if keyword in payee:
                     return self.canonicalize()
         return None, {}, set()

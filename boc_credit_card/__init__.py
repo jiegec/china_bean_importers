@@ -44,12 +44,15 @@ class Importer(importer.ImporterProtocol):
         card_number = None
         begin = False
         lineno = 0
+
         for i in range(doc.page_count):
             page = doc[i]
             text = page.get_text("blocks")
             for (x0, y0, x1, y1, content, block_no, block_type) in text:
                 lineno += 1
                 content = content.strip()
+                if block_type != 0: # 0: text, 1: image
+                    continue
                 if re.match('(第 [0-9]+ 页/共)|([0-9]+ 页)', content):
                     continue
 
@@ -95,15 +98,18 @@ class Importer(importer.ImporterProtocol):
                                 tags = set()
                                 account1 = find_account_by_card_number(self.config, card_number)
 
+                                skip = False
                                 for b in self.config['importers']['card_narration_blacklist']:
                                     if b in narration:
                                         print(f"Item skipped due to blacklist: {narration} [{units}]", file=sys.stderr)
-                                        continue
+                                        skip = True
+                                if skip:
+                                    continue
 
                                 if expense:
-                                    units1 = -units
+                                    units = -units
 
-                                if m := match_destination_and_metadata(self.config, narration, payee):
+                                if m := match_destination_and_metadata(self.config, narration, narration): # match twice with narration
                                     (account2, new_meta, new_tags) = m
                                     metadata.update(new_meta)
                                     tags = tags.union(new_tags)
@@ -121,8 +127,8 @@ class Importer(importer.ImporterProtocol):
                                 #     units1 = -units1
 
                                 txn = data.Transaction(
-                                    meta=metadata, date=date, flag=self.FLAG, payee=payee, narration=narration, tags=data.EMPTY_SET, links=data.EMPTY_SET, postings=[
-                                        data.Posting(account=account1, units=units1,
+                                    meta=metadata, date=date, flag=self.FLAG, payee=payee, narration=narration, tags=tags, links=data.EMPTY_SET, postings=[
+                                        data.Posting(account=account1, units=units,
                                                      cost=None, price=None, flag=None, meta=None),
                                         data.Posting(account=account2, units=None,
                                                      cost=None, price=None, flag=None, meta=None),

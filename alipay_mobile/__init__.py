@@ -27,9 +27,12 @@ class Importer(CsvImporter):
 
         for lineno, row in enumerate(csv.reader(self.content)):
             row = [col.strip() for col in row]
-            #   0      1        2        3        4       5      6        7        8          9       10
-            # 收/支, 交易对方, 对方账号, 商品说明, 收付款方式, 金额, 交易状态, 交易分类, 交易订单号, 商家订单号, 交易时间
-            if row[0] == "收/支" and row[1] == "交易对方":
+            if len(row) <= 12:
+                continue
+            #   0        1        2        3       4       5     6       7        8          9       10      11
+            # 交易时间, 交易分类, 交易对方, 对方账号, 商品说明, 收/支, 金额, 收付款方式, 交易状态, 交易订单号, 商家订单号, 备注
+
+            if row[0] == "交易时间" and row[1] == "交易分类":
                 # skip table header
                 begin = True
             elif begin and row[0].startswith('------'):
@@ -41,15 +44,14 @@ class Importer(CsvImporter):
                 tags = set()
 
                 # parse some basic info
-                time = parse(row[10])
-                units = amount.Amount(D(row[5]), "CNY")
-                metadata["serial"] = row[8]
-                direction, payee, payee_account, narration, method, _, status, category = row[
-                    :8]
+                time, category, payee, payee_account, narration, direction, amt, method, status, serial = row[:10]
+                time = parse(time)
+                units = amount.Amount(D(amt), "CNY")
+                metadata["serial"] = serial
 
                 # fill metadata
                 if payee_account != '':
-                    metadata["payee_account"] = row[2]
+                    metadata["payee_account"] = payee_account
                 metadata["imported_category"] = category
                 metadata["payment_method"] = "支付宝"
                 metadata["time"] = time.time().isoformat()
@@ -62,7 +64,7 @@ class Importer(CsvImporter):
                     expense = True
                 elif direction == '收入':
                     expense = False
-                elif direction == '其他':
+                elif direction == '其他' or direction == '不计收支':
                     if '退款' in narration or '退款成功' in status:
                         expense = False
                         tags.add('refund')
@@ -75,6 +77,11 @@ class Importer(CsvImporter):
                             expense = True
                     if payee == '花呗' and '还款' in narration:
                         expense = True
+                    if expense is None:
+                        # if '交易关闭' in status or '解冻成功' in status:
+                        my_warn(f"Transaction type not recognized, please confirm", lineno, row)
+                        expense = True
+                        tags.add('confirmation-needed')
 
                 my_assert(expense is not None,
                             f"Unknown transaction type", lineno, row)
