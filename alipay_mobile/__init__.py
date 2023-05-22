@@ -12,7 +12,7 @@ class Importer(CsvImporter):
     def __init__(self, config) -> None:
         super().__init__(config)
         self.encoding = 'gbk'
-        self.title_keyword = '电子客户回单'
+        self.match_keywords = ['支付宝', '电子客户回单']
         self.file_account_name = 'alipay_mobile'
 
     def parse_metadata(self):

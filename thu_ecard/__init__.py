@@ -11,7 +11,7 @@ class Importer(CsvImporter):
 
     def __init__(self, config) -> None:
         super().__init__(config)
-        self.title_keyword = '终端编号'
+        self.match_keywords = ['终端编号']
         self.file_account_name = 'thu_ecard'
 
     def parse_metadata(self):

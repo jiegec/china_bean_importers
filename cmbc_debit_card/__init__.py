@@ -5,12 +5,11 @@ from beancount.core.number import D
 import re
 
 from china_bean_importers.common import *
+from china_bean_importers.importer import PdfImporter
 
 
-def gen_txn(config, file, parts, lineno, card_acc, flag, real_name):
+def gen_txn(config, file, parts, lineno, flag, card_acc):
 
-    # print(f"gen_txn: {parts}", file=sys.stderr)
-    # return
 
     my_assert(len(parts) >= 10 or len(parts) == 5, f'Cannot parse line in PDF', lineno, parts)
     #    0       1       2       3      4        5        6      7        8         9           10
@@ -82,106 +81,27 @@ def gen_txn(config, file, parts, lineno, card_acc, flag, real_name):
     return txn
 
 
-class Importer(importer.ImporterProtocol):
+class Importer(PdfImporter):
+
     def __init__(self, config) -> None:
-        super().__init__()
-        self.config = config
+        super().__init__(config)
+        self.match_keywords = ['民生银行', '个人账户对账单']
+        self.file_account_name = 'cmbc_debit_card'
+        self.column_offsets = [22, 56, 97, 173, 335, 413, 448, 482, 533, 568, 696]
+        self.content_start_keyword = '对方行名'
+        self.content_end_keyword = '______________'
 
-    def identify(self, file):
-        if "pdf" in file.name.lower():
-            doc = open_pdf(self.config, file.name)
-            if doc is None:
-                return False
-            contents = doc[0].get_text("text")
-            self.words = []
-            for page in doc:
-                self.words.extend(page.get_text("words"))
-            if "个人账户对账单" in contents and "民生银行" in contents:
-                match = re.search(
-                        '起止日期:([0-9]{4}\/[0-9]{2}\/[0-9]{2}).*([0-9]{4}\/[0-9]{2}\/[0-9]{2})', contents)
-                assert(match)
-                self.start = parse(match[1])
-                self.end = parse(match[2])
-                return True
+    def parse_metadata(self):
+        match = re.search('起止日期:([0-9]{4}\/[0-9]{2}\/[0-9]{2}).*([0-9]{4}\/[0-9]{2}\/[0-9]{2})', self.full_content)
+        assert(match)
+        self.start = parse(match[1])
+        self.end = parse(match[2])
+        match = re.search('客户账号:([0-9]+)', self.full_content)
+        assert(match)
+        card_number = match[1]
+        self.card_acc = find_account_by_card_number(self.config, card_number[-4:])
+        my_assert(self.card_acc, f"Unknown card number {card_number}", 0, 0)
 
-        return False
 
-    def file_account(self, file):
-        return "cmbc_debit_card"
-
-    def file_date(self, file):
-        return self.start
-
-    def file_name(self, file):
-        return "to." + self.end + ".pdf"
-
-    def extract(self, file, existing_entries=None):
-
-        entries = []
-
-        card_number = None
-        valid = False
-        lineno = 0
-        real_name = None
-
-        parts = []
-        last_y0 = 0
-        last_col = -1
-        # x offset of columns
-        columns = [22, 56, 97, 173, 335, 413, 448, 482, 533, 568, 696]
-
-        for (x0, y0, x1, y1, content, block_no, line_no, word_no) in self.words:
-            # print(f'{x0} {y0} {content}\n', file=sys.stderr)
-            # continue
-            lineno += 1
-            content = content.strip()
-
-            # Find real name
-            if content.startswith("客户姓名:") and real_name is None:
-                real_name = content.split(":")[1].strip()
-            if content.startswith("客户账号:") and card_number is None:
-                card_number = content.split(":")[1].strip()[-4:]
-                card_acc = find_account_by_card_number(self.config, card_number)
-                my_assert(card_acc, f"Unknown card number {card_number}", lineno, parts)
-
-            if card_number is None:
-                continue
-
-            if not valid and "对方行名" in content:
-                valid = True
-            elif valid and "______________________" in content:
-                valid = False
-            elif valid:
-                # find current column
-                for i, off in enumerate(columns):
-                    if x0 >= off:
-                        curr_col = i
-                # print(f'curr_col: {curr_col}, last_col: {last_col}', file=sys.stderr)
-                if x0 < 100 and len(parts) > 3:
-                    # a new entry
-                    if len(parts) > 0:
-                        txn = gen_txn(self.config, file, parts, lineno,
-                                        card_acc, self.FLAG, real_name)
-                        entries.append(txn)
-                        parts = []
-                    parts.append(content)
-                else:
-                    if curr_col != last_col:
-                        parts.append(content)
-                    else:
-                        if y0 == last_y0:
-                            # no newline
-                            parts[-1] = parts[-1] + " " + content
-                        else:
-                            # newline
-                            parts[-1] = parts[-1] + content
-                last_y0 = y0
-                last_col = curr_col
-        
-        if len(parts) > 0:
-            txn = gen_txn(self.config, file, parts, lineno,
-                            card_acc, self.FLAG, real_name)
-            entries.append(txn)
-            parts = []
-
-        return list(filter(lambda e: e is not None, entries))
+    def generate_tx(self, row, lineno, file):
+        return gen_txn(self.config, file, row, lineno, self.FLAG, self.card_acc)

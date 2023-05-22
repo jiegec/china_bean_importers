@@ -12,7 +12,7 @@ class Importer(CsvImporter):
 
     def __init__(self, config) -> None:
         super().__init__(config)
-        self.title_keyword = '微信支付账单明细'
+        self.match_keywords = ['微信支付账单明细']
         self.file_account_name = 'wechat'
 
     def parse_metadata(self):
