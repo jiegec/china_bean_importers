@@ -1,5 +1,4 @@
 from dateutil.parser import parse
-from beancount.ingest import importer
 from beancount.core import data, amount
 from beancount.core.number import D
 import re

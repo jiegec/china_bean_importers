@@ -1,5 +1,4 @@
 from dateutil.parser import parse
-import datetime
 import sys
 from beancount.ingest import importer
 from beancount.core import data, amount
