@@ -96,6 +96,11 @@ class Importer(PdfImporter):
         assert(match)
         self.start = parse(match[1])
         self.end = parse(match[2])
+
+        match = re.search('客户姓名:(\w+)', self.full_content)
+        assert(match)
+        self.real_name = match[1]
+
         match = re.search('客户账号:([0-9]+)', self.full_content)
         assert(match)
         card_number = match[1]
