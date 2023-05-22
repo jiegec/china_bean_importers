@@ -25,18 +25,14 @@ def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
     # parts[3]: 金额
     units1 = amount.Amount(D(parts[3]), "CNY")
 
-    skip = False
-    for b in config['importers']['card_narration_blacklist']:
-        if b in narration:
-            print(f"Item in blacklist: {parts[7:10]} {date} {narration}  [{units1}] --- ", file=sys.stderr, end='')
-            if units1 < amount.Amount(D(0), "CNY"):
-                print(f"Expense skipped", file=sys.stderr)
-                skip = True
-            else:
-                print(f"Income kept in record", file=sys.stderr)
-            break
-    if skip:
-        return None
+    # check blacklist
+    if in_blacklist(config, narration):
+        print(f"Item in blacklist: {date} {narration} [{units1}]", file=sys.stderr, end=' -- ')
+        if units1 < amount.Amount(D(0), "CNY"):
+            print(f"Expense skipped", file=sys.stderr)
+            return None
+        else:
+            print(f"Income kept in record", file=sys.stderr)
 
     metadata = data.new_metadata(file.name, lineno)
     metadata["imported_category"] = parts[5]

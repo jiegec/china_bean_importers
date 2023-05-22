@@ -97,12 +97,8 @@ class Importer(importer.ImporterProtocol):
                                 tags = set()
                                 account1 = find_account_by_card_number(self.config, card_number)
 
-                                skip = False
-                                for b in self.config['importers']['card_narration_blacklist']:
-                                    if b in narration:
-                                        print(f"Item skipped due to blacklist: {narration} [{units}]", file=sys.stderr)
-                                        skip = True
-                                if skip:
+                                if in_blacklist(self.config, narration):
+                                    print(f"Item skipped due to blacklist: {date} {narration} [{units}]", file=sys.stderr)
                                     continue
 
                                 if expense:

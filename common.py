@@ -1,7 +1,7 @@
 import re
 import sys
 import typing
-import copy
+from beancount.core import amount
 
 import fitz
 
@@ -101,6 +101,13 @@ New account {new_account} from {m}
 
 def unknown_account(config, expense) -> str:
     return config['unknown_expense_account'] if expense else config['unknown_income_account']
+
+
+def in_blacklist(config, narration):
+    for b in config['importers']['card_narration_blacklist']:
+        if b in narration:
+            return True
+    return False
 
 
 def my_assert(cond, msg, lineno, row):
