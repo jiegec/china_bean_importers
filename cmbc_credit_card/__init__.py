@@ -55,7 +55,7 @@ class Importer(CsvImporter):
             print(f"Item skipped due to blacklist: {date} {orig_narration} [{units}]", file=sys.stderr)
             return None
 
-        if m := match_destination_and_metadata(self.config, payee, narration):
+        if m := match_destination_and_metadata(self.config, orig_narration, payee):
             (account2, new_meta, new_tags) = m
             metadata.update(new_meta)
             tags = tags.union(new_tags)

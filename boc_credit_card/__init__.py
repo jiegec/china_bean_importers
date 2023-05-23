@@ -111,7 +111,7 @@ class Importer(importer.ImporterProtocol):
                                 if expense:
                                     units = -units
 
-                                if m := match_destination_and_metadata(self.config, payee, narration): # match twice with narration
+                                if m := match_destination_and_metadata(self.config, orig_narration, payee): # match twice with narration
                                     (account2, new_meta, new_tags) = m
                                     metadata.update(new_meta)
                                     tags = tags.union(new_tags)
