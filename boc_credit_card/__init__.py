@@ -87,24 +87,31 @@ class Importer(importer.ImporterProtocol):
                                 expense = False
                                 done = True
                             if done:
-                                payee = None
-                                narration = "".join(
+                                orig_narration = "".join(
                                     description.split("\n")[:-2])
                                 value = description.split("\n")[-2]
                                 units = amount.Amount(D(value), currency)
 
+                                if '-' in orig_narration:
+                                    hypen_idx = orig_narration.index('-')
+                                    narration, payee = orig_narration[:hypen_idx].strip(), orig_narration[hypen_idx+1:].strip()
+                                else:
+                                    narration = orig_narration
+                                    payee = None
+
                                 metadata = data.new_metadata(file.name, lineno)
                                 tags = set()
                                 account1 = find_account_by_card_number(self.config, card_number)
+                                my_assert(account1, f"Unknown card number {card_number}", lineno, None)
 
-                                if in_blacklist(self.config, narration):
-                                    print(f"Item skipped due to blacklist: {date} {narration} [{units}]", file=sys.stderr)
+                                if in_blacklist(self.config, orig_narration):
+                                    print(f"Item skipped due to blacklist: {date} {orig_narration} [{units}]", file=sys.stderr)
                                     continue
 
                                 if expense:
                                     units = -units
 
-                                if m := match_destination_and_metadata(self.config, narration, narration): # match twice with narration
+                                if m := match_destination_and_metadata(self.config, payee, narration): # match twice with narration
                                     (account2, new_meta, new_tags) = m
                                     metadata.update(new_meta)
                                     tags = tags.union(new_tags)

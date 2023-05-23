@@ -43,7 +43,7 @@ class BaseImporter(importer.ImporterProtocol):
     def extract_rows(self) -> list[list[str]]:
         raise 'Unimplemented'
 
-    def generate_tx(self, row: list[str], lineno: int):
+    def generate_tx(self, row: list[str], lineno: int, file):
         raise 'Unimplemented'
 
 
@@ -59,9 +59,9 @@ class CsvImporter(BaseImporter):
             raise 'match_keywords not set'
         try:
             with open(file.name, 'r', encoding=self.encoding) as f:
-                full_content = f.read()
-                self.content = full_content.splitlines()
-                if "csv" in file.name and all(map(lambda c: c in full_content, self.match_keywords)):
+                self.full_content = f.read()
+                self.content = self.full_content.splitlines()
+                if "csv" in file.name and all(map(lambda c: c in self.full_content, self.match_keywords)):
                     self.parse_metadata()
                     return True
         except:
