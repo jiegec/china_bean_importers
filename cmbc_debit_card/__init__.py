@@ -10,16 +10,15 @@ from china_bean_importers.importer import PdfImporter
 def gen_txn(config, file, parts, lineno, flag, card_acc):
 
 
-    my_assert(len(parts) >= 10 or len(parts) == 5, f'Cannot parse line in PDF', lineno, parts)
+    # my_assert(len(parts) >= 10 or len(parts) == 5, f'Cannot parse line in PDF', lineno, parts)
     #    0       1       2       3      4        5        6      7        8         9           10
     # 凭证类型, 凭证号码, 交易时间, 摘要, 交易金额, 账户余额, 现转标志, 交易渠道, 交易机构, 对方户名/账号, 对方行名
     # either 11/10 items, or only [2:6] is contained
 
     # fill to 11 fields
-    if len(parts) == 5:
-        parts = [''] * 2 + parts + [''] * 4
-    if len(parts) == 10:
-        parts = parts + ['']
+    if parts[0][:2] == '20':
+        parts = [''] * 2 + parts
+    parts = parts + [''] * (11 - len(parts))
 
     if '/' in parts[9]:
         payee, payee_account = parts[9].split('/')
