@@ -55,10 +55,10 @@ class Importer(importer.ImporterProtocol):
                 if re.match('(第 [0-9]+ 页/共)|([0-9]+ 页)', content):
                     continue
 
-                if "人民币/RMB" in content:
+                if "人民币交易明细" in content:
                     currency = "CNY"
-                elif "外币/USD" in content:
-                    currency = "USD"
+                elif m := re.match('\((\w+)\)外币交易明细', content):
+                    currency = m.group(1)
                 match = re.search('卡号：([0-9]+)', content)
                 if match:
                     card_number = int(match[1])
@@ -66,7 +66,7 @@ class Importer(importer.ImporterProtocol):
                 elif card_number:
                     if not begin and "Expenditure" in content:
                         begin = True
-                    elif begin and "Loyalty Plan" in content:
+                    elif begin and ("Loyalty Plan" in content or "交易日" in content):
                         begin = False
                     elif begin:
                         # Is it a date line?
