@@ -86,12 +86,12 @@ def match_destination_and_metadata(config, desc, payee):
             if new_account.startswith(account):
                 # new account is deeper than or equal to current account
                 account, mapping = new_account, m
-            else:
-                assert account.startswith(new_account), f"""Conflict destination accounts found for narration {desc} and payee {payee}:
+            elif not account.startswith(new_account):
+                my_warn(f"""Conflict destination accounts found for narration {desc} and payee {payee}:
 Old account {account} from {mapping}
 New account {new_account} from {m}
 
-"""
+""", 0, '')
 
         metadata.update(new_metadata)
         tags.update(new_tags)
