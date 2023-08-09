@@ -25,7 +25,8 @@ def gen_txn(config, file, parts, lineno, flag, card_acc):
     else:
         payee, payee_account = parts[9], ''
     narration = parts[3]
-    date = parse(parts[2]).date()
+    full_time = parse(parts[2])
+    date = full_time.date()
     units1 = amount.Amount(D(parts[4]), "CNY")
 
     # check blacklist
@@ -38,7 +39,7 @@ def gen_txn(config, file, parts, lineno, flag, card_acc):
             print(f"Income kept in record", file=sys.stderr)
 
     metadata = data.new_metadata(file.name, lineno)
-    metadata["time"] = parts[2]
+    metadata["time"] = full_time.time()
     if parts[7] != '':
         metadata["source"] = parts[7]
     if payee_account != '':
