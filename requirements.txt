@@ -4,8 +4,6 @@
 #
 #    pip-compile requirements.in
 #
---index-url https://mirrors.bfsu.edu.cn/pypi/web/simple
-
 attrs==22.2.0
     # via pytest
 beancount==2.3.5
@@ -16,14 +14,12 @@ bottle==0.12.23
     # via beancount
 cachetools==5.3.0
     # via google-auth
-certifi==2022.12.7
+certifi==2023.7.22
     # via requests
 chardet==5.1.0
     # via beancount
 charset-normalizer==3.0.1
     # via requests
-exceptiongroup==1.1.0
-    # via pytest
 google-api-core==2.11.0
     # via google-api-python-client
 google-api-python-client==2.74.0
@@ -86,8 +82,6 @@ six==1.16.0
     #   python-dateutil
 soupsieve==2.3.2.post1
     # via beautifulsoup4
-tomli==2.0.1
-    # via pytest
 uritemplate==4.1.1
     # via google-api-python-client
 urllib3==1.26.14
