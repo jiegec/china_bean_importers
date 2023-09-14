@@ -39,7 +39,7 @@ def gen_txn(config, file, parts, lineno, flag, card_acc):
             print(f"Income kept in record", file=sys.stderr)
 
     metadata = data.new_metadata(file.name, lineno)
-    metadata["time"] = full_time.time()
+    metadata["time"] = full_time.time().isoformat()
     if parts[7] != '':
         metadata["source"] = parts[7]
     if payee_account != '':
