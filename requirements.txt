@@ -84,5 +84,5 @@ soupsieve==2.3.2.post1
     # via beautifulsoup4
 uritemplate==4.1.1
     # via google-api-python-client
-urllib3==1.26.17
+urllib3==1.26.18
     # via requests
