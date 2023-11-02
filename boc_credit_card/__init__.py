@@ -1,9 +1,11 @@
 from dateutil.parser import parse
-import sys
 from beancount.ingest import importer
 from beancount.core import data, amount
 from beancount.core.number import D
+
 import re
+import sys
+import fitz
 
 
 from china_bean_importers.common import *
