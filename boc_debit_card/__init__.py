@@ -87,16 +87,16 @@ class Importer(PdfImporter):
         self.content_end_keyword = '温馨提示'
 
     def parse_metadata(self):
-        match = re.search('交易区间： ([0-9]+-[0-9]+-[0-9]+) 至 ([0-9]+-[0-9]+-[0-9]+)', self.full_content)
+        match = re.search(r'交易区间： ([0-9]+-[0-9]+-[0-9]+) 至 ([0-9]+-[0-9]+-[0-9]+)', self.full_content)
         assert(match)
         self.start = parse(match[1])
         self.end = parse(match[2])
 
-        match = re.search('客户姓名： (\w+)', self.full_content)
+        match = re.search(r'客户姓名： (\w+)', self.full_content)
         assert(match)
         self.real_name = match[1]
         
-        match = re.search('[0-9]{19}', self.full_content)
+        match = re.search(r'[0-9]{19}', self.full_content)
         assert(match)
         card_number = match[0]
         self.card_acc = find_account_by_card_number(self.config, card_number[-4:])

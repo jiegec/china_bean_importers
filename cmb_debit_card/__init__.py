@@ -65,11 +65,11 @@ class Importer(PdfImporter):
 
     def parse_metadata(self):
     
-        match = re.search('名：(\w+)', self.full_content)
+        match = re.search(r'名：(\w+)', self.full_content)
         assert(match)
         self.real_name = match[1]
 
-        match = re.search('[0-9]{16}', self.full_content)
+        match = re.search(r'[0-9]{16}', self.full_content)
         assert(match)
         card_number = match[0]
         self.card_acc = find_account_by_card_number(self.config, card_number[-4:])

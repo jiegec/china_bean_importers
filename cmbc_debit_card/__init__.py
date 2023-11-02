@@ -87,16 +87,16 @@ class Importer(PdfImporter):
         self.content_end_keyword = '______________'
 
     def parse_metadata(self):
-        match = re.search('起止日期:([0-9]{4}\/[0-9]{2}\/[0-9]{2}).*([0-9]{4}\/[0-9]{2}\/[0-9]{2})', self.full_content)
+        match = re.search(r'起止日期:([0-9]{4}\/[0-9]{2}\/[0-9]{2}).*([0-9]{4}\/[0-9]{2}\/[0-9]{2})', self.full_content)
         assert(match)
         self.start = parse(match[1])
         self.end = parse(match[2])
 
-        match = re.search('客户姓名:(\w+)', self.full_content)
+        match = re.search(r'客户姓名:(\w+)', self.full_content)
         assert(match)
         self.real_name = match[1]
 
-        match = re.search('客户账号:([0-9]+)', self.full_content)
+        match = re.search(r'客户账号:([0-9]+)', self.full_content)
         assert(match)
         card_number = match[1]
         self.card_acc = find_account_by_card_number(self.config, card_number[-4:])

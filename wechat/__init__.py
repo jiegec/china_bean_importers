@@ -16,9 +16,9 @@ class Importer(CsvImporter):
         self.file_account_name = 'wechat'
 
     def parse_metadata(self):
-        if m := re.search('起始时间：\[([0-9]+-[0-9]+-[0-9]+)', self.full_content):
+        if m := re.search(r'起始时间：\[([0-9]+-[0-9]+-[0-9]+)', self.full_content):
             self.start = parse(m[1])
-        if m := re.search('终止时间：\[([0-9]+-[0-9]+-[0-9]+)', self.full_content):
+        if m := re.search(r'终止时间：\[([0-9]+-[0-9]+-[0-9]+)', self.full_content):
             self.end = parse(m[1])
 
     def extract(self, file, existing_entries=None):

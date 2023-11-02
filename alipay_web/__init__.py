@@ -22,7 +22,7 @@ class Importer(importer.ImporterProtocol):
     def file_date(self, file):
         with open(file.name, 'r', encoding='gbk') as f:
             for row in csv.reader(f):
-                m = re.search('起始日期:\[([0-9 :-]+)\]', row[0])
+                m = re.search(r'起始日期:\[([0-9 :-]+)\]', row[0])
                 if m:
                     date = parse(m[1])
                     return date
@@ -31,7 +31,7 @@ class Importer(importer.ImporterProtocol):
     def file_name(self, file):
         with open(file.name, 'r', encoding='gbk') as f:
             for row in csv.reader(f):
-                m = re.search('终止日期:\[([0-9 :-]+)\]', row[0])
+                m = re.search(r'终止日期:\[([0-9 :-]+)\]', row[0])
                 if m:
                     date = parse(m[1])
                     return "to." + date.date().isoformat() + '.txt'

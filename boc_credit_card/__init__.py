@@ -52,14 +52,14 @@ class Importer(importer.ImporterProtocol):
                 content = content.strip()
                 if block_type != 0: # 0: text, 1: image
                     continue
-                if re.match('(第 [0-9]+ 页/共)|([0-9]+ 页)', content):
+                if re.match(r'(第 [0-9]+ 页/共)|([0-9]+ 页)', content):
                     continue
 
                 if "人民币交易明细" in content:
                     currency = "CNY"
-                elif m := re.match('\((\w+)\)外币交易明细', content):
+                elif m := re.match(r'\((\w+)\)外币交易明细', content):
                     currency = m.group(1)
-                match = re.search('卡号：([0-9]+)', content)
+                match = re.search(r'卡号：([0-9]+)', content)
                 if match:
                     card_number = int(match[1])
                     begin = False
@@ -71,7 +71,7 @@ class Importer(importer.ImporterProtocol):
                     elif begin:
                         # Is it a date line?
                         # card number can be empty
-                        if re.match('[0-9]+-[0-9]+-[0-9]+\n[0-9]+-[0-9]+-[0-9]+(\n[0-9]+)?', content, re.MULTILINE):
+                        if re.match(r'[0-9]+-[0-9]+-[0-9]+\n[0-9]+-[0-9]+-[0-9]+(\n[0-9]+)?', content, re.MULTILINE):
                             date = parse(content.split('\n')[0]).date()
                             description = ""
                         else:

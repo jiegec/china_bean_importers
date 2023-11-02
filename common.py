@@ -1,11 +1,9 @@
 import re
 import sys
 import typing
-from beancount.core import amount
 
-import fitz
 
-card_tail_pattern = re.compile('.*银行.*\(([0-9]{4})\)')
+card_tail_pattern = re.compile(r'.*银行.*\(([0-9]{4})\)')
 
 SAME_AS_NARRATION = object()
 
@@ -48,6 +46,7 @@ def match_card_tail(src):
 
 
 def open_pdf(config, name):
+    import fitz
     doc = fitz.open(name)
     if doc.is_encrypted:
         for password in config['pdf_passwords']:

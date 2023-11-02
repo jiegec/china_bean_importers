@@ -16,9 +16,9 @@ class Importer(CsvImporter):
 
     def parse_metadata(self):
         if len(self.content) > 2:
-            if m := re.search('([0-9]{4}-[0-9]{2}-[0-9]{2})', self.content[1]):
+            if m := re.search(r'([0-9]{4}-[0-9]{2}-[0-9]{2})', self.content[1]):
                 self.start = parse(m[1])
-            if m := re.search('([0-9]{4}-[0-9]{2}-[0-9]{2})', self.content[-2]):
+            if m := re.search(r'([0-9]{4}-[0-9]{2}-[0-9]{2})', self.content[-2]):
                 self.end = parse(m[1])
 
     def extract(self, file, existing_entries=None):
