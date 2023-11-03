@@ -125,7 +125,7 @@ class Importer(CsvImporter):
                     account2 = unknown_account(self.config, expense)
 
                 # check status
-                if status in ['支付成功', '已存入零钱', '已转账', '已收钱']:
+                if status in ['支付成功', '已存入零钱', '已转账', '对方已收钱']:
                     pass
                 elif '退款' in status:
                     tags.add('refund')
