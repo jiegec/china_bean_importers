@@ -123,6 +123,13 @@ class Importer(CsvImporter):
                     else:
                         account2 = unknown_account(self.config, expense)
 
+                if "&" in method:
+                    my_warn(
+                        f"Multiple payment methods found, please confirm", lineno, row
+                    )
+                    tags.add("confirmation-needed")
+
+
                 # check status and add warning if needed
                 if '成功' not in status:
                     my_warn(
