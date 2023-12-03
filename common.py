@@ -5,6 +5,13 @@ import typing
 
 card_tail_pattern = re.compile(r'.*银行.*\(([0-9]{4})\)')
 
+# a map from currency name(chinese) to currency code(ISO 4217)
+currency_code_map = {
+    "人民币": "CNY",
+    "美元": "USD",
+    "日元": "JPY",
+}
+
 SAME_AS_NARRATION = object()
 
 class BillDetailMapping(typing.NamedTuple):
@@ -97,6 +104,8 @@ New account {new_account} from {m}
 
     return account, metadata, tags
 
+def match_currency_code(currency_name):
+    return currency_code_map[currency_name] if currency_name in currency_code_map else None
 
 def unknown_account(config, expense) -> str:
     return config['unknown_expense_account'] if expense else config['unknown_income_account']
