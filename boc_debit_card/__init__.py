@@ -6,7 +6,11 @@ import re
 from china_bean_importers.common import *
 from china_bean_importers.importer import PdfImporter
 
-
+boc_currency_map = {
+    "人民币": "CNY",
+    "美元": "USD",
+    "日元": "JPY",
+}
 def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
 
     my_assert(len(parts) == 12, f'Cannot parse line in PDF', lineno, parts)
@@ -21,14 +25,14 @@ def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
     # parts[0]: 记账日期
     date = parse(parts[0]).date()
     # parts[2]: 币别
-    my_assert(parts[2] == "人民币", f"Cannot handle non-CNY currency {parts[2]} currently", lineno, parts)
+    my_assert(parts[2] in boc_currency_map, f"Cannot handle currency {parts[2]} currently", lineno, parts)
+    currency_unit = boc_currency_map[parts[2]]
     # parts[3]: 金额
-    units1 = amount.Amount(D(parts[3]), "CNY")
-
+    units1 = amount.Amount(D(parts[3]), currency_unit)
     # check blacklist
     if in_blacklist(config, narration):
         print(f"Item in blacklist: {date} {narration} [{units1}]", file=sys.stderr, end=' -- ')
-        if units1 < amount.Amount(D(0), "CNY"):
+        if units1 < amount.Amount(D(0), currency_unit):
             print(f"Expense skipped", file=sys.stderr)
             return None
         else:
