@@ -77,4 +77,4 @@ class Importer(PdfImporter):
 
 
     def generate_tx(self, row, lineno, file):
-        return gen_txn(self.config, file, row, lineno, self.FLAG, self.card_acc)
+        return gen_txn(self.config, file, row, lineno, self.FLAG, self.card_acc, self.real_name)
