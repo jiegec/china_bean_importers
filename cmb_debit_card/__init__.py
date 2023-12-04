@@ -38,7 +38,7 @@ def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
     # Handle transfer to credit/debit cards
     # parts[5]: 对手信息
     if parts[5].startswith(real_name):
-        card_number2 = int(parts[5][-4:])
+        card_number2 = parts[5].strip()[-4:]
         new_account = find_account_by_card_number(config, card_number2)
         if new_account is not None:
             account2 = new_account
