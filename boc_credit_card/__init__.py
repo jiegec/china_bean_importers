@@ -63,7 +63,7 @@ class Importer(importer.ImporterProtocol):
                     currency = m.group(1)
                 match = re.search(r'卡号：([0-9]+)', content)
                 if match:
-                    card_number = int(match[1])
+                    card_number = match[1][-4:]
                     begin = False
                 elif card_number:
                     if not begin and "Expenditure" in content:
