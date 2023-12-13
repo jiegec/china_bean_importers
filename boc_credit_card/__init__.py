@@ -146,7 +146,7 @@ class Importer(importer.ImporterProtocol):
                         if m := currency_regex.match(text):
                             after_currency = True
                             if m.group(3) == '人民币':
-                                currency = 'RMB'
+                                currency = 'CNY'
                             elif m.group(3) == '外币':
                                 currency = m.group(2)
 
