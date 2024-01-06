@@ -186,12 +186,12 @@ class Importer(importer.ImporterProtocol):
 
             metadata = data.new_metadata(file.name, lineno)
             tags = set()
-            account1 = find_account_by_card_number(self.config, card_number)
-            my_assert(account1, f"Unknown card number {card_number}", lineno, None)
 
-            if in_blacklist(self.config, orig_narration):
-                print(f"Item skipped due to blacklist: {date} {orig_narration} [{units}]", file=sys.stderr)
-                continue
+            if card_number == '':
+                my_warn(f"Empty card number", lineno, entry)
+            else:
+                account1 = find_account_by_card_number(self.config, card_number)
+                my_assert(account1, f"Unknown card number {card_number}", lineno, None)
 
             if expense != '':
                 units = -units
@@ -203,6 +203,10 @@ class Importer(importer.ImporterProtocol):
             else:
                 date = parse(post_date)
                 # transaction date is empty
+
+            if in_blacklist(self.config, orig_narration):
+                print(f"Item skipped due to blacklist: {date} {orig_narration} [{units}]", file=sys.stderr)
+                continue
 
             if m := match_destination_and_metadata(self.config, orig_narration, payee): # match twice with narration
                 (account2, new_meta, new_tags) = m
