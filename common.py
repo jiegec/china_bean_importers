@@ -8,8 +8,15 @@ card_tail_pattern = re.compile(r'.*银行.*\(([0-9]{4})\)')
 # a map from currency name(chinese) to currency code(ISO 4217)
 currency_code_map = {
     "人民币": "CNY",
+    "港币": "HKD",
+    "澳门元": "MOP",
     "美元": "USD",
     "日元": "JPY",
+    "韩元": "KRW",
+    "欧元": "EUR",
+    "英镑": "GBP",
+    "加拿大元": "CAD",
+    "澳大利亚元": "AUD",
 }
 
 SAME_AS_NARRATION = object()
