@@ -1,3 +1,6 @@
 venv/
 __pycache__
 secret.py
+dist/
+*.egg-info/
+build/
