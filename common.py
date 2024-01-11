@@ -119,6 +119,9 @@ def unknown_account(config, expense) -> str:
 
 
 def in_blacklist(config, narration):
+    for b in config['importers']['card_narration_whitelist']:
+        if b in narration:
+            return False
     for b in config['importers']['card_narration_blacklist']:
         if b in narration:
             return True

@@ -29,6 +29,7 @@ config = {
         'thu_ecard': {
             "account": "Assets:Card:THU",
         },
+        'card_narration_whitelist': ["财付通(银联云闪付)"],
         'card_narration_blacklist': ["支付宝", "财付通", "美团支付"],
     },
 
