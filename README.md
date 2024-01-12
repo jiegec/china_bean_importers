@@ -1,13 +1,14 @@
 # china_bean_importers
 
-Beancount 导入脚本，数据源：
+Beancount 导入脚本，支持的数据源包括：
 
 - 微信支付
 - 支付宝（网页端、手机端）
 - 中国银行信用卡、借记卡
 - 招商银行借记卡
-- 民生银行借记卡
-- 清华大学校园卡
+- 建设银行借记卡
+- 民生银行借记卡、信用卡（测试）
+- 清华大学校园卡（新、旧）
 
 ## 使用方法
 
@@ -19,15 +20,15 @@ git clone https://github.com/jiegec/china_bean_importers
 git submodule add git@github.com:jiegec/china_bean_importers.git
 ```
 
-安装依赖：
+安装 importer 和依赖：
 
 ```shell
-pip3 install -r requirements.txt
+pip install --editable .
 ```
 
 运行 `cp config.example.py config.py` 复制配置模板，编辑 `config.py` 填入你的配置，**放置在你的项目目录中**。
 
-最后，在导入脚本中按需加入：
+最后，在 beancount 使用的导入脚本中按需加入：
 
 ```python
 from china_bean_importers import wechat, alipay_web, alipay_mobile, boc_credit_card, boc_debit_card, cmb_debit_card
@@ -44,7 +45,7 @@ CONFIG = [
 ]
 ```
 
-## 数据源
+## 可用 Importer
 
 ### 微信支付（`wechat`）
 
@@ -85,13 +86,21 @@ CONFIG = [
 
 ### 中国银行信用卡（`boc_credit_card`）
 
-每个月中行会发送信用卡合并账单，下载附件即可。
+每个月中行会发送信用卡合并账单，下载邮件的附件 PDF；或者在中国银行手机客户端-信用卡-账单-发送电子账单，获得 EML 格式的文件。
+
+Importer 可自动识别上述两种格式。
 
 ### 中国银行借记卡（`boc_debit_card`）
 
 在中国银行手机客户端，点击更多->助手->交易流水打印->立即申请，记录下 PDF 密码。
 
 下载邮件附件，得到带有密码的 PDF 文件，把密码记录到 `config.py` 中，或者使用工具去除密码。
+
+### 中国建设银行借记卡（`ccb_debit_card`）
+
+手机客户端导出方法：我的->银行卡->管理->明细导出->明细导出申请->选择发送方式为 Excel。申请成功后，查询导出历史，得到解压密码。
+
+下载邮件附件，输入密码解压 ZIP 文件，得到 XLS，转换为 CSV 格式。
 
 ### 招商银行借记卡（`cmb_debit_card`）
 
@@ -105,25 +114,27 @@ CONFIG = [
 
 下载邮件附件，解压 ZIP 文件，得到 PDF。
 
-### 民生银行信用卡（`cmbc_crebit_card`）（尚未实现）
-
-<!-- 在手机银行客户端，点击收支明细->（右上角菜单）交易明细->导出（下载电子版明细）->交易类型全部->排版方式横版->同意协议并提交。
-
-下载邮件附件，解压 ZIP 文件，得到 PDF。 -->
-
-发送的账单为 HTML 格式邮件。
-
-### 清华大学校园卡（`thu_ecard`）
+### 清华大学校园卡（旧）（`thu_ecard_old`）
 
 导出方式：校园网环境登录 <ecard.tsinghua.edu.cn>，交易日志查询->导出，并使用 Excel 转存为 CSV 格式。
 
 注意：导出总是包含入学以来所有记录，可根据需要删除此前已经导入的内容。
 
-### 中国建设银行借记卡（尚未实现）
 
-手机客户端导出方法：我的->银行卡->管理->明细导出->明细导出申请->选择发送方式为 Excel。申请成功后，查询导出历史，得到解压密码。
+## 测试 Importer
 
-下载邮件附件，输入密码解压 ZIP 文件，得到 XLS。
+### 民生银行信用卡（`cmbc_crebit_card`）（未完成）
+
+<!-- 在手机银行客户端，点击收支明细->（右上角菜单）交易明细->导出（下载电子版明细）->交易类型全部->排版方式横版->同意协议并提交。
+
+下载邮件附件，解压 ZIP 文件，得到 PDF。 -->
+
+手动将发送 / 查询的账单转换为 CSV，格式为：
+
+```csv
+交易日,记账日,卡号末四位,授权码,金额,摘要
+0104,20230104,XXXX,,-88.88,foo-bar
+```
 
 ### 微众银行借记卡（尚未实现）
 
