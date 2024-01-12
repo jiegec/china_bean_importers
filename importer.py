@@ -4,85 +4,92 @@ from datetime import datetime
 
 from china_bean_importers.common import *
 
-class BaseImporter(importer.ImporterProtocol):
 
+class BaseImporter(importer.ImporterProtocol):
     def __init__(self, config) -> None:
         super().__init__()
         self.config: dict = config
         self.match_keywords: list[str] = None
         self.file_account_name: str = None
-        self.full_content: str = ''
+        self.full_content: str = ""
         self.content: list[str] = []
         self.start: datetime = None
         self.end: datetime = None
         self.filetype: str = None
 
     def identify(self, file):
-        raise 'Unimplemented'
-    
+        raise "Unimplemented"
+
     def parse_metadata(self):
-        raise 'Unimplemented'
+        raise "Unimplemented"
 
     def file_account(self, file):
         if self.file_account_name is None:
-            raise 'file_account_name not set'
+            raise "file_account_name not set"
         return self.file_account_name
 
     def file_date(self, file):
         return self.start
 
     def file_name(self, file):
-        assert(self.filetype is not None)
+        assert self.filetype is not None
         if self.end:
             return f"to.{self.end.date().isoformat()}.{self.filetype}"
 
     # common methods for table-based import
     def extract(self, file, existing_entries=None):
-        return list(filter(lambda x: x is not None, [self.generate_tx(r, i, file) for i, r in enumerate(self.extract_rows())]))
+        return list(
+            filter(
+                lambda x: x is not None,
+                [
+                    self.generate_tx(r, i, file)
+                    for i, r in enumerate(self.extract_rows())
+                ],
+            )
+        )
 
     def extract_rows(self) -> list[list[str]]:
-        raise 'Unimplemented'
+        raise "Unimplemented"
 
     def generate_tx(self, row: list[str], lineno: int, file):
-        raise 'Unimplemented'
+        raise "Unimplemented"
 
 
 class CsvImporter(BaseImporter):
-
     def __init__(self, config) -> None:
         super().__init__(config)
-        self.encoding: str = 'utf-8'
-        self.filetype = 'csv'
+        self.encoding: str = "utf-8"
+        self.filetype = "csv"
 
     def identify(self, file):
         if self.match_keywords is None:
-            raise 'match_keywords not set'
+            raise "match_keywords not set"
         try:
-            with open(file.name, 'r', encoding=self.encoding) as f:
+            with open(file.name, "r", encoding=self.encoding) as f:
                 self.full_content = f.read()
                 self.content = self.full_content.splitlines()
-                if "csv" in file.name and all(map(lambda c: c in self.full_content, self.match_keywords)):
+                if "csv" in file.name and all(
+                    map(lambda c: c in self.full_content, self.match_keywords)
+                ):
                     self.parse_metadata()
                     return True
-        except:
+        except BaseException:
             return False
 
 
 class PdfImporter(BaseImporter):
-
     def __init__(self, config) -> None:
         super().__init__(config)
-        self.filetype = 'pdf'
+        self.filetype = "pdf"
         self.column_offsets: list[int] = None
         self.content_start_keyword: str = None
         self.content_end_keyword: str = None
 
     def identify(self, file):
-
         if self.match_keywords is None:
-            raise 'match_keywords not set'
+            raise "match_keywords not set"
 
-        if 'pdf' not in file.name.lower():
+        if "pdf" not in file.name.lower():
             return False
 
         doc = open_pdf(self.config, file.name)
@@ -100,10 +107,9 @@ class PdfImporter(BaseImporter):
             return True
 
     def extract_rows(self):
-        
-        assert(self.column_offsets)
-        assert(self.content_start_keyword)
-        assert(self.content_end_keyword)
+        assert self.column_offsets
+        assert self.content_start_keyword
+        assert self.content_end_keyword
 
         entries = []
         parts = []
@@ -111,8 +117,7 @@ class PdfImporter(BaseImporter):
         last_y0 = 0
         last_col = -1
 
-        for (x0, y0, x1, y1, content, block_no, line_no, word_no) in self.content:
-
+        for x0, y0, x1, y1, content, block_no, line_no, word_no in self.content:
             content = content.strip()
 
             if not valid and self.content_start_keyword in content:
@@ -123,7 +128,7 @@ class PdfImporter(BaseImporter):
                 # find current column
                 for i, off in enumerate(self.column_offsets):
                     if x0 >= off:
-                        curr_col = i                
+                        curr_col = i
                 if curr_col > last_col:
                     # new column in existing row
                     parts.append(content)
@@ -143,7 +148,7 @@ class PdfImporter(BaseImporter):
                     parts.append(content)
                 last_y0 = y0
                 last_col = curr_col
-        
+
         if len(parts) > 0:
             entries.append(parts)
             parts = []

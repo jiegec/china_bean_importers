@@ -20,32 +20,32 @@ class Importer(importer.ImporterProtocol):
         return "alipay_web"
 
     def file_date(self, file):
-        with open(file.name, 'r', encoding='gbk') as f:
+        with open(file.name, "r", encoding="gbk") as f:
             for row in csv.reader(f):
-                m = re.search(r'起始日期:\[([0-9 :-]+)\]', row[0])
+                m = re.search(r"起始日期:\[([0-9 :-]+)\]", row[0])
                 if m:
                     date = parse(m[1])
                     return date
         return super().file_date(file)
 
     def file_name(self, file):
-        with open(file.name, 'r', encoding='gbk') as f:
+        with open(file.name, "r", encoding="gbk") as f:
             for row in csv.reader(f):
-                m = re.search(r'终止日期:\[([0-9 :-]+)\]', row[0])
+                m = re.search(r"终止日期:\[([0-9 :-]+)\]", row[0])
                 if m:
                     date = parse(m[1])
-                    return "to." + date.date().isoformat() + '.txt'
+                    return "to." + date.date().isoformat() + ".txt"
         return super().file_name(file)
 
     def extract(self, file, existing_entries=None):
         entries = []
         begin = False
-        with open(file.name, 'r', encoding='gbk') as f:
+        with open(file.name, "r", encoding="gbk") as f:
             for lineno, row in enumerate(csv.reader(f)):
                 row = [col.strip() for col in row]
                 if row[0] == "交易号" and row[1] == "商家订单号":
                     begin = True
-                elif begin and row[0].startswith('------'):
+                elif begin and row[0].startswith("------"):
                     break
                 elif begin:
                     metadata = data.new_metadata(file.name, lineno)
@@ -56,7 +56,8 @@ class Importer(importer.ImporterProtocol):
 
                     account1 = "Assets:Alipay"
                     account2 = find_destination_account(
-                        self.config, payee, narration, row[10] == "支出")
+                        self.config, payee, narration, row[10] == "支出"
+                    )
 
                     if row[10] == "支出":
                         units1 = -units
@@ -66,11 +67,31 @@ class Importer(importer.ImporterProtocol):
                         assert False
 
                     txn = data.Transaction(
-                        meta=metadata, date=date, flag=self.FLAG, payee=payee, narration=narration, tags=data.EMPTY_SET, links=data.EMPTY_SET, postings=[
-                            data.Posting(account=account1, units=units1,
-                                         cost=None, price=None, flag=None, meta=None),
-                            data.Posting(account=account2, units=None,
-                                         cost=None, price=None, flag=None, meta=None),
-                        ])
+                        meta=metadata,
+                        date=date,
+                        flag=self.FLAG,
+                        payee=payee,
+                        narration=narration,
+                        tags=data.EMPTY_SET,
+                        links=data.EMPTY_SET,
+                        postings=[
+                            data.Posting(
+                                account=account1,
+                                units=units1,
+                                cost=None,
+                                price=None,
+                                flag=None,
+                                meta=None,
+                            ),
+                            data.Posting(
+                                account=account2,
+                                units=None,
+                                cost=None,
+                                price=None,
+                                flag=None,
+                                meta=None,
+                            ),
+                        ],
+                    )
                     entries.append(txn)
         return entries

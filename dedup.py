@@ -8,8 +8,9 @@ def find_wechat_family(new_entries_list, existing_entries):
     wechat_family = defaultdict(list)
     for key, new_entries in new_entries_list:
         for entry in new_entries:
-            if (entry.narration == "亲属卡" or entry.narration == "亲属卡-退款") \
-                    and entry.postings[1].account == "Expenses:WeChat:FamilyCard":
+            if (
+                entry.narration == "亲属卡" or entry.narration == "亲属卡-退款"
+            ) and entry.postings[1].account == "Expenses:WeChat:FamilyCard":
                 wechat_family[(entry.date, entry.postings[0])].append(entry)
 
     # Collect corresponding transactions
@@ -24,8 +25,9 @@ def find_wechat_family(new_entries_list, existing_entries):
         mod_entries = []
         for entry in new_entries:
             # Find matching entry
-            if (entry.narration == "亲属卡" or entry.narration == "亲属卡-退款") \
-                    and entry.postings[1].account == "Expenses:WeChat:Family":
+            if (
+                entry.narration == "亲属卡" or entry.narration == "亲属卡-退款"
+            ) and entry.postings[1].account == "Expenses:WeChat:Family":
                 if (entry.date, entry.postings[0]) in corresponding:
                     marked_meta = entry.meta.copy()
                     marked_meta[DUPLICATE_META] = True
@@ -39,7 +41,8 @@ def find_wechat_family(new_entries_list, existing_entries):
                         if entry.postings[1].account == "Expenses:Unknown":
                             postings = entry.postings
                             postings[1] = postings[1]._replace(
-                                account="Expenses:Refund")
+                                account="Expenses:Refund"
+                            )
                             entry = entry._replace(postings=postings)
                     else:
                         narration = f"亲属卡 - {entry.narration}"

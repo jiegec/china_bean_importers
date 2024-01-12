@@ -16,9 +16,9 @@ class Importer(CsvImporter):
         self.file_account_name = "ccb_debit_card"
 
     def parse_metadata(self):
-        if m := re.search("起始日期:(\d+)", self.full_content):
+        if m := re.search("起始日期:(\\d+)", self.full_content):
             self.start = parse(m[1])
-        if m := re.search("结束日期:(\d+)", self.full_content):
+        if m := re.search("结束日期:(\\d+)", self.full_content):
             self.end = parse(m[1])
         match = re.search("卡号/账号:([0-9]{19})", self.full_content)
         my_assert(match, "Invalid file, no card number found!", 0, 0)
@@ -80,7 +80,9 @@ class Importer(CsvImporter):
 
                 my_assert(expense is not None, f"Unknown transaction type", lineno, row)
 
-                account2, new_meta, new_tags = match_destination_and_metadata(self.config, narration, payee)
+                account2, new_meta, new_tags = match_destination_and_metadata(
+                    self.config, narration, payee
+                )
                 metadata.update(new_meta)
                 tags = tags.union(new_tags)
                 if account2 is None:
