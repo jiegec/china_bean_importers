@@ -4,6 +4,7 @@ import typing
 
 
 card_tail_pattern = re.compile(r".*银行.*\(([0-9]{4})\)")
+common_date_pattern = re.compile(r"([0-9]{4}-[0-9]{2}-[0-9]{2})")
 
 # a map from currency name(chinese) to currency code(ISO 4217)
 currency_code_map = {

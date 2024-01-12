@@ -67,7 +67,10 @@ class CsvImporter(BaseImporter):
         try:
             with open(file.name, "r", encoding=self.encoding) as f:
                 self.full_content = f.read()
-                self.content = self.full_content.splitlines()
+                self.content = []
+                for ln in self.full_content.splitlines():
+                    if (l := ln.strip()) != "":
+                        self.content.append(l)
                 if "csv" in file.name and all(
                     map(lambda c: c in self.full_content, self.match_keywords)
                 ):

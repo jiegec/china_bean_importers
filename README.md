@@ -1,5 +1,7 @@
 # china_bean_importers
 
+[![Test Python package](https://github.com/jiegec/china_bean_importers/actions/workflows/test_package.yml/badge.svg)](https://github.com/jiegec/china_bean_importers/actions/workflows/test_package.yml)
+
 Beancount 导入脚本，支持的数据源包括：
 
 - 微信支付
@@ -120,6 +122,13 @@ Importer 可自动识别上述两种格式。
 
 注意：导出总是包含入学以来所有记录，可根据需要删除此前已经导入的内容。
 
+### 清华大学校园卡（新）（`thu_ecard`）
+
+由于校园卡系统与浏览器交互的数据进行了一定的“加密”（并无实际意义），原始数据的获取需要按照以下步骤进行：
+
+1. 使用统一身份认证登录 card.tsinghua.edu.cn
+2. 按 F12 打开浏览器工具，复制 `thu_ecard/decode.js` 的代码，粘贴到控制台中。修改必要的参数：`idserial` 改为本人学工号，`starttime` 和 `endtime` 改为需要的日期范围（闭区间）。然后执行。
+3. 将控制台中打印的 JSON 转换为 CSV 格式存储（可使用在线工具 [1](https://data.page/json/csv)、[2](https://www.convertcsv.com/json-to-csv.htm)、[3](https://konklone.io/json/)，或使用 Pandas 等库）。
 
 ## 测试 Importer
 
