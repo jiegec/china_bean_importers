@@ -70,6 +70,8 @@ class Importer(CsvImporter):
                 # workaround
                 if direction == "/" and type == "信用卡还款":
                     direction = "支出"
+                if direction == "/" and "零钱" in type:
+                    direction = "收入"
                 if (i := narration.find("付款方留言")) != -1:
                     narration = f"{narration[:i]};{narration[i:]}"
 
@@ -88,7 +90,9 @@ class Importer(CsvImporter):
                 # determine source account
                 source_config = self.config["importers"]["wechat"]
                 account1 = None
-                if method == "零钱" or status == "已存入零钱":  # 微信零钱
+                if method == "零钱" or status in [
+                    "已存入零钱", "已到账", "充值完成", "提现已到账"
+                    ]:  # 微信零钱
                     account1 = source_config["account"]
                 elif tail := match_card_tail(method):  # cards
                     account1 = find_account_by_card_number(self.config, tail)
@@ -134,26 +138,32 @@ class Importer(CsvImporter):
                         if expense
                         else source_config["transfer_income_account"]
                     )
+                # 6. 微信零钱 related
+                elif status in ["充值完成", "提现已到账"]:
+                    account2 = match_card_tail(method)
+                    my_assert(account2, f"Unknown card number {tail}", lineno, row)
+
                 # 6. find by narration and payee
                 new_account, new_meta, new_tags = match_destination_and_metadata(
                     self.config, narration, payee
                 )
-                if new_account:
+                if account2 is None:
                     account2 = new_account
                 metadata.update(new_meta)
                 tags = tags.union(new_tags)
-                # fallback
+
+                # final fallback
                 if account2 is None:
                     account2 = unknown_account(self.config, expense)
 
                 # check status
-                if status in ["支付成功", "已存入零钱", "已转账", "对方已收钱"]:
+                if status in ["支付成功", "已存入零钱", "已转账", "对方已收钱"] or "已到账" in status:
                     pass
                 elif "退款" in status:
                     tags.add("refund")
                 else:
                     tags.add("confirmation-needed")
-                    my_warn(f"Unhandled status: {status}", lineno, row)
+                    my_warn(f"Unhandled tx status: {status}", lineno, row)
 
                 # create transaction
                 txn = data.Transaction(
