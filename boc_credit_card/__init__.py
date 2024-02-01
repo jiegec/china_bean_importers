@@ -17,7 +17,11 @@ class Importer(importer.ImporterProtocol):
     def identify(self, file):
         if file.name.upper().endswith(".PDF"):
             self.type = "pdf"
-            return "中国银行信用卡" in file.name
+            if "中国银行信用卡" in file.name:
+                import fitz
+                self.doc = fitz.open(file.name)
+                return True
+            return False
         elif file.name.upper().endswith(".EML"):
             self.type = "email"
             from bs4 import BeautifulSoup
@@ -42,9 +46,6 @@ class Importer(importer.ImporterProtocol):
 
     def file_date(self, file):
         if self.type == "pdf":
-            import fitz
-
-            self.doc = fitz.open(file.name)
             begin = False
             page = self.doc[0]
             text = page.get_text("blocks")
@@ -66,7 +67,7 @@ class Importer(importer.ImporterProtocol):
         return super().file_date(file)
 
     def extract(self, file, existing_entries=None):
-        card_num_regex = re.compile(r".*\(卡号:(\d+)\)")
+        card_num_regex = re.compile(r".*\(卡号(:|：)(\d+)\)")
         currency_regex = re.compile(r"(\(([a-zA-Z]+)\))?(\w+)交易明细.*")
 
         # collect text entries from EML / PDF
@@ -95,7 +96,7 @@ class Importer(importer.ImporterProtocol):
                         currency = m.group(2)
                     match = card_num_regex.search(content)
                     if match:
-                        card_number = match[1][-4:]
+                        card_number = match[2][-4:]
                         begin = False
                     elif card_number:
                         if not begin and "Expenditure" in content:
@@ -110,7 +111,9 @@ class Importer(importer.ImporterProtocol):
                                 content,
                                 re.MULTILINE,
                             ):
-                                date = parse(content.split("\n")[0]).date()
+                                lines = content.split("\n")
+                                trans_date = lines[0]
+                                post_date = lines[1]
                                 description = ""
                             else:
                                 # Otherwise: Description/Deposit/Expenditure
@@ -130,8 +133,8 @@ class Importer(importer.ImporterProtocol):
                                     value = desc_lines[-2]
                                     entry = [
                                         currency,
-                                        "",
-                                        date,
+                                        trans_date,
+                                        post_date,
                                         card_number,
                                         orig_narration,
                                         value if not expense else "",
@@ -187,7 +190,9 @@ class Importer(importer.ImporterProtocol):
         # generate beancount posting entries
         entries = []
 
+        last_account = None
         for lineno, entry in enumerate(text_entries):
+            print(entry, file=sys.stderr)
             # 货币 交易日 银行记账日 卡号后四位 交易描述 存入 支出
             (
                 currency,
@@ -221,9 +226,12 @@ class Importer(importer.ImporterProtocol):
 
             if card_number == "":
                 my_warn(f"Empty card number", lineno, entry)
+                tags.add('needs-confirmation')
+                account1 = last_account if last_account is not None else "Assets:Unknown"
             else:
                 account1 = find_account_by_card_number(self.config, card_number)
                 my_assert(account1, f"Unknown card number {card_number}", lineno, None)
+                last_account = account1
 
             if expense != "":
                 units = -units
