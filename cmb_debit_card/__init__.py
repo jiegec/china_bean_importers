@@ -6,6 +6,7 @@ import re
 from china_bean_importers.common import *
 from china_bean_importers.importer import PdfImporter
 
+PAYEE_RE = re.compile(r"(\D*)(\d+)")
 
 def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
     # Customer Type can be empty
@@ -23,9 +24,18 @@ def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
     date = parse(parts[0]).date()
     # parts[2]: 金额
     units1 = amount.Amount(D(parts[2]), "CNY")
+    # parts[3]: 余额
+    balance = amount.Amount(D(parts[3]), "CNY")
 
     metadata = data.new_metadata(file.name, lineno)
+    metadata["balance"] = str(balance)
     tags = set()
+
+    payee_account = None
+    if m := PAYEE_RE.match(payee):
+        payee, payee_account = m.groups()
+    if payee_account:
+        metadata["payee_account"] = payee_account
 
     if m := match_destination_and_metadata(config, narration, payee):
         (account2, new_meta, new_tags) = m
@@ -36,9 +46,8 @@ def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
 
     # Handle transfer to credit/debit cards
     # parts[5]: 对手信息
-    if parts[5].startswith(real_name):
-        card_number2 = parts[5].strip()[-4:]
-        new_account = find_account_by_card_number(config, card_number2)
+    if payee.startswith(real_name) and payee_account:
+        new_account = find_account_by_card_number(config, payee_account)
         if new_account is not None:
             account2 = new_account
 
@@ -48,7 +57,7 @@ def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
         flag=flag,
         payee=payee,
         narration=narration,
-        tags=data.EMPTY_SET,
+        tags=tags,
         links=data.EMPTY_SET,
         postings=[
             data.Posting(
@@ -74,12 +83,14 @@ def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
 
 class Importer(PdfImporter):
     def __init__(self, config) -> None:
+        import re
         super().__init__(config)
         self.match_keywords = ["招商银行交易流水"]
         self.file_account_name = "cmbc_debit_card"
-        self.column_offsets = [30, 50, 100, 200, 280, 350, 450]
-        self.content_start_keyword = "Type"
-        self.content_end_keyword = "合并统计"
+        self.column_offsets = [30, 50, 100, 200, 280, 350, 400]
+        self.content_start_keyword = "Party" # "Counter Party"
+        self.content_end_regex = re.compile(r"^\d+/\d+$") # match page number like "1/5"
+        self.content_end_keyword = '————' # match last page
 
     def parse_metadata(self):
         match = re.search(r"名：(\w+)", self.full_content)
