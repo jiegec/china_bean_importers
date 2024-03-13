@@ -140,7 +140,8 @@ class Importer(CsvImporter):
                     )
                 # 6. 微信零钱 related
                 elif status in ["充值完成", "提现已到账"]:
-                    account2 = match_card_tail(method)
+                    tail = match_card_tail(method)
+                    account2 = find_account_by_card_number(self.config, tail)
                     my_assert(account2, f"Unknown card number {tail}", lineno, row)
 
                 # 6. find by narration and payee
