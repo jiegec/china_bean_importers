@@ -47,11 +47,12 @@ class Importer(CsvImporter):
                 break
 
             # detect duplicate items by pos_journo
-            pos_journo = row[1]
-            if pos_journo in self.all_ids:
-                my_warn(f"Duplicate pos_journo detected: {pos_journo}", lineno, row)
-                continue
-            self.all_ids.add(pos_journo)
+            pos_journo = row[1].strip()
+            if pos_journo != "":
+                if pos_journo in self.all_ids:
+                    my_warn(f"Duplicate pos_journo detected: {pos_journo}", lineno, row)
+                    continue
+                self.all_ids.add(pos_journo)
 
             # parse data line
             metadata: dict = data.new_metadata(file.name, lineno)
@@ -75,9 +76,9 @@ class Importer(CsvImporter):
 
             expense = None
 
-            if "消费" in summary:
+            if any(["消费", "补卡"], lambda k: k in summary):
                 expense = True
-            elif "充值" in summary or "代发" in summary:
+            elif any(["充值", "代发", "圈存"], lambda k: k in summary):
                 expense = False
 
             my_assert(expense is not None, f"Unknown transaction type", lineno, row)
