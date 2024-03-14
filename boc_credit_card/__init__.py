@@ -66,7 +66,7 @@ class Importer(importer.ImporterProtocol):
             return parse(bill_date)
         return super().file_date(file)
 
-    def extract(self, file, existing_entries=None):
+    def extract_text_entries(self):
         card_num_regex = re.compile(r".*\(卡号(:|：)(\d+)\)")
         currency_regex = re.compile(r"(\(([a-zA-Z]+)\))?(\w+)交易明细.*")
 
@@ -187,11 +187,15 @@ class Importer(importer.ImporterProtocol):
                         else:
                             my_warn(f"Empty entries for {card_num}", 0, None)
 
+        return text_entries
+
+    def extract(self, file, existing_entries=None):
+        
         # generate beancount posting entries
         entries = []
 
         last_account = None
-        for lineno, entry in enumerate(text_entries):
+        for lineno, entry in enumerate(self.extract_text_entries()):
             print(entry, file=sys.stderr)
             # 货币 交易日 银行记账日 卡号后四位 交易描述 存入 支出
             (
