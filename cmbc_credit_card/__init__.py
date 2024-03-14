@@ -20,7 +20,7 @@ class Importer(importer.ImporterProtocol):
     def identify(self, file):
         if file.name.upper().endswith(".CSV"):
             self.type = "csv"
-            with open(file.name, "r", encoding=self.encoding) as f:
+            with open(file.name, "r", encoding='utf-8') as f:
                 self.full_content = f.read()
                 self.content = []
                 for ln in self.full_content.splitlines():
@@ -91,13 +91,13 @@ class Importer(importer.ImporterProtocol):
                 # year of post date might be different from transaction date
                 tx_mon = int(row[0][:2])
                 post_mon = int(row[1][4:6])
-                post_year = row[1][4:]
+                post_year = row[1][:4]
                 if tx_mon > post_mon:
                     my_warn(f"Transaction date {row[0]} is in the future of post date {row[1]}, try to fix", i, row)
                     row[0] = f"{post_year - 1}{row[0]}"
                 else:
                     row[0] = post_year + row[0]
-                entries.append(row[:3], row[4:]) # skip 授权码
+                entries.append(row[:3] + row[4:]) # skip 授权码
         elif self.type == "email":
             currency_ele = self.body.select("span#fixBand29")[:-1]
             detail_table = self.body.select("span#loopBand3")
@@ -115,13 +115,13 @@ class Importer(importer.ImporterProtocol):
                     tx_date = f"{tx_year}/{tx_date}"
                     post_year = stmt_year if int(post_date[:2]) <= stmt_mon else stmt_year - 1
                     post_date = f"{post_year}/{post_date}"
-                    entries.append([tx_date, post_date, card, amount, narration, currency])
+                    entries.append([tx_date, post_date, card, narration, amount, currency])
 
         return entries
 
     def generate_tx(self, row: list, lineno: int, file):
         #   0      1        2       3    4    5
-        # 交易日, 记账日, 卡号末四位, 金额, 摘要, 货币
+        # 交易日, 记账日, 卡号末四位, 摘要, 金额, 货币
 
         # parse data line
         metadata: dict = data.new_metadata(file.name, lineno)
@@ -130,9 +130,9 @@ class Importer(importer.ImporterProtocol):
         # parse some basic info
         date = parse(row[0]).date()
         metadata["post_date"] = parse(row[1]).date()
-        units = amount.Amount(D(row[3]), row[5])
+        units = amount.Amount(D(row[4]), row[5])
 
-        _, _, card_number, _, orig_narration = row[:5]
+        _, _, card_number, orig_narration = row[:4]
 
         if m := FOREIGN_CURR_TX.match(orig_narration):
             # foreign currency transaction

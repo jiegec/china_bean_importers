@@ -118,14 +118,18 @@ Importer 可自动识别上述两种格式。
 
 ### 民生银行信用卡（`cmbc_crebit_card`）
 
-手动将发送 / 查询（[民生银行信用卡](https://creditcard.cmbc.com.cn/home/cn/web/product/index.shtml)-登录-账单查询）的账单转换为 CSV，格式为（带表头，注意各列顺序）：
+Importer 支持以下两种格式：
+
+1. 民生银行发送至邮箱的电子账单 EML 文件（**推荐**，可自动识别货币）。
+
+2. 手动将查询（[民生银行信用卡](https://creditcard.cmbc.com.cn/home/cn/web/product/index.shtml)-登录-账单查询）的账单转换为 CSV 文件，格式为（带表头，注意各列顺序）：
 
 ```csv
 交易日,记账日,卡号末四位,授权码,金额,摘要
 0104,20230104,XXXX,,-88.88,foo-bar
 ```
 
-如果从邮件中复制，需要注意给记账日加入年份，并添加“授权码”一列（可以为空）。
+注意此方法默认所有交易货币均为 CNY。
 
 ### 清华大学校园卡（旧）（`thu_ecard_old`）
 
