@@ -20,17 +20,20 @@ class Importer(importer.ImporterProtocol):
     def identify(self, file):
         if file.name.upper().endswith(".CSV"):
             self.type = "csv"
-            with open(file.name, "r", encoding='utf-8') as f:
-                self.full_content = f.read()
-                self.content = []
-                for ln in self.full_content.splitlines():
-                    if (l := ln.strip()) != "":
-                        self.content.append(l)
-                if "csv" in file.name and all(
-                    map(lambda c: c in self.full_content, self.match_keywords)
-                ):
-                    return True
-            return False
+            try:
+                with open(file.name, "r", encoding='utf-8') as f:
+                    self.full_content = f.read()
+                    self.content = []
+                    for ln in self.full_content.splitlines():
+                        if (l := ln.strip()) != "":
+                            self.content.append(l)
+                    if "csv" in file.name and all(
+                        map(lambda c: c in self.full_content, self.match_keywords)
+                    ):
+                        return True
+                return False
+            except:
+                return False
         elif file.name.upper().endswith(".EML"):
             self.type = "email"
             from bs4 import BeautifulSoup
