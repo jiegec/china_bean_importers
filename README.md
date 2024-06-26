@@ -11,6 +11,7 @@ Beancount 导入脚本，支持的数据源包括：
 - 建设银行借记卡
 - 民生银行借记卡、信用卡（测试）
 - 清华大学校园卡（新、旧）
+- 汇丰香港信用卡、储蓄账户
 
 ## 使用方法
 
@@ -46,6 +47,20 @@ CONFIG = [
     cmb_debit_card.Importer(config),
 ]
 ```
+
+## Importer 配置
+
+上面的例子中，每个 Importer 都由全局配置控制行为，格式如 `config.example.py` 所示。其中部分字段的含义包括：
+
+- `importers`：每个 importer 各自需要的配置，通常包括账户映射、分类映射等。其中 `card_narration_whitelist` 和 `card_narration_blacklist` 两个字段适用于各类信用卡 Importer，用于过滤可能在其他 importer 中出现的交易描述（通常是通过支付软件产生的交易）。
+- `card_accounts`：记录各类卡账户的最后四位数字，以自动化地进行账户匹配。如有重复，则默认使用第一个找到的。
+- `pdf_passwords`：在 importer 遇到加密的 PDF 时，会自动尝试这些密码进行解密。推荐使用工具去除密码，避免后续的麻烦。
+- `unknown_expense/income_account`：无法匹配情况下使用的支出/收入账户。
+- `detail_mapping`：用于从交易描述、对手等信息中匹配目标账户、标签等信息，是一个 `BillDetailMapping` 的列表，每个 `BDM` 包含字段：
+  - `narration_keywords`：用于匹配交易描述
+  - `payee_keywords`：用于匹配交易对手，可以使用 `SAME_AS_NARRATION` 来表示与交易描述使用的关键词一致
+  - `destination_account`：在匹配时，对账目使用的目标账户
+  - `additional_tags/metadata`：在匹配时，在账目上添加的额外标签和元数据
 
 ## 可用 Importer
 
@@ -130,6 +145,23 @@ Importer 支持以下两种格式：
 ```
 
 注意此方法默认所有交易货币均为 CNY。
+
+### 汇丰银行（香港）（`hsbc_hk`）
+
+支持汇丰香港储蓄账户/信用卡账单，感谢 [ckyOL](https://blog.ckyol.moe/2023/11/24/HSBCHKcreditCSVImporter/) 提供的经验。
+
+导出方式：登录汇丰网银，点击账户到交易记录页，设定筛选日期进行搜索（信用卡可选择“当期账单”），点击底部下载按钮得到 CSV 文件。导出的文件名必须以 `ACC_` 开头，其中 `ACC` 用于映射不同的账户，需要在 `account_mapping` 配置中存在：
+
+```python
+'hsbc_hk': {
+    "account_mapping": {
+        "One": "Assets:Bank:HSBC",
+        "PULSE": "Liabilities:CreditCards:HSBC:Pulse"
+    },
+}
+```
+
+如果在配置中设置 `use_cnh` 为 `True`，则所有人民币的货币符号将记为 CNH，否则默认记为 CNY。
 
 ### 清华大学校园卡（旧）（`thu_ecard_old`）
 
