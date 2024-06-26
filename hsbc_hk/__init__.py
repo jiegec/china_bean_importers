@@ -73,6 +73,11 @@ class Importer(CsvImporter):
             narration = c["Description"].strip()
             payee = ""
 
+            if "UNIONPAY" in narration:
+                metadata["payment_method"] = "云闪付"
+            elif "APPLEPAY" in narration:
+                metadata["payment_method"] = "Apple Pay"
+
             if self.type == "Credit":
                 status = c["Transaction status"]
                 if status != "POSTED":
