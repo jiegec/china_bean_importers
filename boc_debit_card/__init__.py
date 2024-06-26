@@ -128,7 +128,8 @@ class Importer(PdfImporter):
 
     def parse_metadata(self, file):
         match = re.search(
-            r"交易区间：\s*([0-9]+-[0-9]+-[0-9]+)\s*至\s*([0-9]+-[0-9]+-[0-9]+)", self.full_content
+            r"交易区间：\s*([0-9]+-[0-9]+-[0-9]+)\s*至\s*([0-9]+-[0-9]+-[0-9]+)",
+            self.full_content,
         )
         assert match
         self.start = parse(match[1])

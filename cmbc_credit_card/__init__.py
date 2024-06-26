@@ -7,7 +7,10 @@ import re
 
 from china_bean_importers.common import *
 
-FOREIGN_CURR_TX = re.compile(r'^(?P<desc>.*?)\s*?(?P<country>[A-Z]+)(?P<amount>[-\d.]+)\s*(?P<currency>[A-Z]+)$')
+FOREIGN_CURR_TX = re.compile(
+    r"^(?P<desc>.*?)\s*?(?P<country>[A-Z]+)(?P<amount>[-\d.]+)\s*(?P<currency>[A-Z]+)$"
+)
+
 
 class Importer(importer.ImporterProtocol):
 
@@ -16,12 +19,11 @@ class Importer(importer.ImporterProtocol):
         self.config = config
         self.match_keywords = ["卡号末四位", "交易日"]
 
-
     def identify(self, file):
         if file.name.upper().endswith(".CSV"):
             self.type = "csv"
             try:
-                with open(file.name, "r", encoding='utf-8') as f:
+                with open(file.name, "r", encoding="utf-8") as f:
                     self.full_content = f.read()
                     self.content = []
                     for ln in self.full_content.splitlines():
@@ -47,22 +49,26 @@ class Importer(importer.ImporterProtocol):
                     open(file.name), policy=policy.default
                 )
                 # weird encapsulation
-                raw_body_html = unescape(base64.b64decode(
-                    raw_email.get_body().get_payload()[0].get_body().get_payload()
-                ).decode('gbk'))
-                raw_body_html = raw_body_html.replace(u'\xa0', u' ')
+                raw_body_html = unescape(
+                    base64.b64decode(
+                        raw_email.get_body().get_payload()[0].get_body().get_payload()
+                    ).decode("gbk")
+                )
+                raw_body_html = raw_body_html.replace("\xa0", " ")
                 soup = BeautifulSoup(raw_body_html, features="lxml")
                 self.body = soup.body
                 # find 本期账单日
-                stmtDateCell = self.body.select("span#fixBand36")[0].parent.nextSibling.font.text
+                stmtDateCell = self.body.select("span#fixBand36")[
+                    0
+                ].parent.nextSibling.font.text
                 self.stmt_date = parse(stmtDateCell)
-                return "民生信用卡" in raw_email['Subject']
+                return "民生信用卡" in raw_email["Subject"]
             except BaseException:
                 return False
 
     def file_account(self, file):
         return "cmbc_credit_card"
-    
+
     def file_date(self, file):
         if self.type == "csv":
             if len(self.content) > 1:
@@ -70,17 +76,25 @@ class Importer(importer.ImporterProtocol):
         elif self.type == "email":
             return self.stmt_date
         return super().file_date(file)
-    
+
     def extract(self, file, existing_entries=None):
-        
+
         # generate beancount posting entries
-        tx = list(filter(None, map(lambda e: self.generate_tx(e[1], e[0], file), enumerate(self.extract_text_entries()))))
+        tx = list(
+            filter(
+                None,
+                map(
+                    lambda e: self.generate_tx(e[1], e[0], file),
+                    enumerate(self.extract_text_entries()),
+                ),
+            )
+        )
         return tx
 
     def extract_text_entries(self):
-        '''
+        """
         extract entries in format of `generate_tx` from csv / eml
-        '''
+        """
 
         entries = []
         if self.type == "csv":
@@ -96,29 +110,51 @@ class Importer(importer.ImporterProtocol):
                 post_mon = int(row[1][4:6])
                 post_year = row[1][:4]
                 if tx_mon > post_mon:
-                    my_warn(f"Transaction date {row[0]} is in the future of post date {row[1]}, try to fix", i, row)
+                    my_warn(
+                        f"Transaction date {row[0]} is in the future of post date {row[1]}, try to fix",
+                        i,
+                        row,
+                    )
                     row[0] = f"{post_year - 1}{row[0]}"
                 else:
                     row[0] = post_year + row[0]
-                entries.append(row[:3] + row[4:]) # skip 授权码
+                entries.append(row[:3] + row[4:])  # skip 授权码
         elif self.type == "email":
             currency_ele = self.body.select("span#fixBand29")[:-1]
             detail_table = self.body.select("span#loopBand3")
-            my_assert(len(currency_ele) == len(detail_table), "Length of currency and detail table mismatch", 0, 0)
+            my_assert(
+                len(currency_ele) == len(detail_table),
+                "Length of currency and detail table mismatch",
+                0,
+                0,
+            )
             for i, (currency, detail) in enumerate(zip(currency_ele, detail_table)):
-                currency = match_currency_code(currency.font.text.split()[0]) # "人民币 RMB"
+                currency = match_currency_code(
+                    currency.font.text.split()[0]
+                )  # "人民币 RMB"
                 all_cells = list(map(lambda f: f.text, detail.find_all("font")))
-                my_assert(len(all_cells) % 5 == 0, "Detail table should have 5 cells on each line", 0, all_cells)
+                my_assert(
+                    len(all_cells) % 5 == 0,
+                    "Detail table should have 5 cells on each line",
+                    0,
+                    all_cells,
+                )
                 for j in range(0, len(all_cells), 5):
-                    tx_date, post_date, narration, amount, card = all_cells[j:j+5]
+                    tx_date, post_date, narration, amount, card = all_cells[j : j + 5]
                     # both date in "MM/DD" format
                     stmt_year = self.stmt_date.year
                     stmt_mon = self.stmt_date.month
-                    tx_year = stmt_year if int(tx_date[:2]) <= stmt_mon else stmt_year - 1
+                    tx_year = (
+                        stmt_year if int(tx_date[:2]) <= stmt_mon else stmt_year - 1
+                    )
                     tx_date = f"{tx_year}/{tx_date}"
-                    post_year = stmt_year if int(post_date[:2]) <= stmt_mon else stmt_year - 1
+                    post_year = (
+                        stmt_year if int(post_date[:2]) <= stmt_mon else stmt_year - 1
+                    )
                     post_date = f"{post_year}/{post_date}"
-                    entries.append([tx_date, post_date, card, narration, amount, currency])
+                    entries.append(
+                        [tx_date, post_date, card, narration, amount, currency]
+                    )
 
         return entries
 

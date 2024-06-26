@@ -29,10 +29,10 @@ config = {
         "thu_ecard": {
             "account": "Assets:Card:THU",
         },
-        'hsbc_hk': {
+        "hsbc_hk": {
             "account_mapping": {
                 "One": "Assets:Bank:HSBC",
-                "PULSE": "Liabilities:CreditCards:HSBC:Pulse"
+                "PULSE": "Liabilities:CreditCards:HSBC:Pulse",
             },
             "use_cnh": False,
         },

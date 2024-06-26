@@ -83,6 +83,7 @@ class CsvImporter(BaseImporter):
 class PdfImporter(BaseImporter):
     def __init__(self, config) -> None:
         import re
+
         super().__init__(config)
         self.filetype = "pdf"
         self.column_offsets: list[int] = None
@@ -126,14 +127,18 @@ class PdfImporter(BaseImporter):
         for x0, y0, x1, y1, content, block_no, line_no, word_no in self.content:
             content = content.strip()
 
-            if not valid and (\
-                (self.content_start_keyword and self.content_start_keyword in content) or \
-                (self.content_start_regex and self.content_start_regex.match(content))):
-                    valid = True
-            elif valid and (\
-                (self.content_end_keyword and self.content_end_keyword in content) or \
-                (self.content_end_regex and self.content_end_regex.match(content))):
-                    valid = False
+            if not valid and (
+                (self.content_start_keyword and self.content_start_keyword in content)
+                or (
+                    self.content_start_regex and self.content_start_regex.match(content)
+                )
+            ):
+                valid = True
+            elif valid and (
+                (self.content_end_keyword and self.content_end_keyword in content)
+                or (self.content_end_regex and self.content_end_regex.match(content))
+            ):
+                valid = False
             elif valid:
                 # find current column
                 for i, off in enumerate(self.column_offsets):

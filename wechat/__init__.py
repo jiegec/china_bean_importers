@@ -91,8 +91,11 @@ class Importer(CsvImporter):
                 source_config = self.config["importers"]["wechat"]
                 account1 = None
                 if method == "零钱" or status in [
-                    "已存入零钱", "已到账", "充值完成", "提现已到账"
-                    ]:  # 微信零钱
+                    "已存入零钱",
+                    "已到账",
+                    "充值完成",
+                    "提现已到账",
+                ]:  # 微信零钱
                     account1 = source_config["account"]
                 elif tail := match_card_tail(method):  # cards
                     account1 = find_account_by_card_number(self.config, tail)
@@ -158,7 +161,10 @@ class Importer(CsvImporter):
                     account2 = unknown_account(self.config, expense)
 
                 # check status
-                if status in ["支付成功", "已存入零钱", "已转账", "对方已收钱"] or "已到账" in status:
+                if (
+                    status in ["支付成功", "已存入零钱", "已转账", "对方已收钱"]
+                    or "已到账" in status
+                ):
                     pass
                 elif "退款" in status:
                     tags.add("refund")

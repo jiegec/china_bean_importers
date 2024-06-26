@@ -8,6 +8,7 @@ from china_bean_importers.importer import PdfImporter
 
 PAYEE_RE = re.compile(r"(\D*)(\d+)")
 
+
 def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
     # Customer Type can be empty
     assert len(parts) == 6 or len(parts) == 7
@@ -84,13 +85,16 @@ def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
 class Importer(PdfImporter):
     def __init__(self, config) -> None:
         import re
+
         super().__init__(config)
         self.match_keywords = ["招商银行交易流水"]
         self.file_account_name = "cmbc_debit_card"
         self.column_offsets = [30, 50, 100, 200, 280, 350, 400]
-        self.content_start_keyword = "Party" # "Counter Party"
-        self.content_end_regex = re.compile(r"^\d+/\d+$") # match page number like "1/5"
-        self.content_end_keyword = '————' # match last page
+        self.content_start_keyword = "Party"  # "Counter Party"
+        self.content_end_regex = re.compile(
+            r"^\d+/\d+$"
+        )  # match page number like "1/5"
+        self.content_end_keyword = "————"  # match last page
 
     def parse_metadata(self, file):
         match = re.search(r"名：(\w+)", self.full_content)
