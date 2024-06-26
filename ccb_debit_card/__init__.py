@@ -15,7 +15,7 @@ class Importer(CsvImporter):
         self.match_keywords = ["中国建设银行", "交易明细"]
         self.file_account_name = "ccb_debit_card"
 
-    def parse_metadata(self):
+    def parse_metadata(self, file):
         if m := re.search("起始日期:(\\d+)", self.full_content):
             self.start = parse(m[1])
         if m := re.search("结束日期:(\\d+)", self.full_content):

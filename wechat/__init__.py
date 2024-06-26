@@ -14,7 +14,7 @@ class Importer(CsvImporter):
         self.match_keywords = ["微信支付账单明细"]
         self.file_account_name = "wechat"
 
-    def parse_metadata(self):
+    def parse_metadata(self, file):
         if m := re.search(r"起始时间：\[([0-9]+-[0-9]+-[0-9]+)", self.full_content):
             self.start = parse(m[1])
         if m := re.search(r"终止时间：\[([0-9]+-[0-9]+-[0-9]+)", self.full_content):

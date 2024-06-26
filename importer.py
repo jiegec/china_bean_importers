@@ -20,7 +20,7 @@ class BaseImporter(importer.ImporterProtocol):
     def identify(self, file):
         raise "Unimplemented"
 
-    def parse_metadata(self):
+    def parse_metadata(self, file):
         raise "Unimplemented"
 
     def file_account(self, file):
@@ -74,7 +74,7 @@ class CsvImporter(BaseImporter):
                 if "csv" in file.name and all(
                     map(lambda c: c in self.full_content, self.match_keywords)
                 ):
-                    self.parse_metadata()
+                    self.parse_metadata(file)
                     return True
         except BaseException:
             return False
@@ -109,7 +109,7 @@ class PdfImporter(BaseImporter):
             self.full_content += page.get_text("text")
 
         if all(map(lambda c: c in self.full_content, self.match_keywords)):
-            self.parse_metadata()
+            self.parse_metadata(file)
             return True
 
     def extract_rows(self):

@@ -107,7 +107,7 @@ class Importer(PdfImporter):
         self.content_start_keyword = "对方行名"
         self.content_end_keyword = "______________"
 
-    def parse_metadata(self):
+    def parse_metadata(self, file):
         match = re.search(
             r"起止日期:([0-9]{4}\/[0-9]{2}\/[0-9]{2}).*([0-9]{4}\/[0-9]{2}\/[0-9]{2})",
             self.full_content,

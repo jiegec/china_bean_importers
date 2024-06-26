@@ -14,7 +14,7 @@ class Importer(CsvImporter):
         self.match_keywords = ["终端编号"]
         self.file_account_name = "thu_ecard_old"
 
-    def parse_metadata(self):
+    def parse_metadata(self, file):
         if len(self.content) > 2:
             if m := re.search(r"([0-9]{4}-[0-9]{2}-[0-9]{2})", self.content[1]):
                 self.start = parse(m[1])

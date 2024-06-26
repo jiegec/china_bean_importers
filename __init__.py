@@ -9,4 +9,5 @@ __all__ = [
     "cmbc_debit_card",
     "thu_ecard_old",
     "wechat",
+    "hsbc_hk"
 ]

@@ -92,7 +92,7 @@ class Importer(PdfImporter):
         self.content_end_regex = re.compile(r"^\d+/\d+$") # match page number like "1/5"
         self.content_end_keyword = '————' # match last page
 
-    def parse_metadata(self):
+    def parse_metadata(self, file):
         match = re.search(r"名：(\w+)", self.full_content)
         assert match
         self.real_name = match[1]

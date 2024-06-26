@@ -126,7 +126,7 @@ class Importer(PdfImporter):
         self.content_start_keyword = "对方开户行"
         self.content_end_keyword = "温馨提示"
 
-    def parse_metadata(self):
+    def parse_metadata(self, file):
         match = re.search(
             r"交易区间：\s*([0-9]+-[0-9]+-[0-9]+)\s*至\s*([0-9]+-[0-9]+-[0-9]+)", self.full_content
         )

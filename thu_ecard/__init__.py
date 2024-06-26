@@ -14,7 +14,7 @@ class Importer(CsvImporter):
         self.file_account_name = "thu_ecard"
         self.all_ids = set()
 
-    def parse_metadata(self):
+    def parse_metadata(self, file):
         if len(self.content) > 2:
             if m := common_date_pattern.search(self.content[1]):
                 self.end = parse(m[1])
