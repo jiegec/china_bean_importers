@@ -7,6 +7,7 @@ __all__ = [
     "cmb_debit_card",
     "cmbc_credit_card",
     "cmbc_debit_card",
+    "icbc_debit_card",
     "hsbc_hk",
     "thu_ecard_old",
     "wechat",

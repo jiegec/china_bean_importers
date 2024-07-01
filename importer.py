@@ -169,3 +169,70 @@ class PdfImporter(BaseImporter):
             parts = []
 
         return entries
+
+class PdfTableImporter(BaseImporter):
+    def __init__(self, config) -> None:
+        import re
+        super().__init__(config)
+        self.filetype = "pdf"
+        self.vertical_lines: list[int] = None
+        self.header_first_cell: str = None
+        self.header_first_cell_regex = None
+
+    def identify(self, file):
+        if self.match_keywords is None:
+            raise "match_keywords not set"
+
+        if "pdf" not in file.name.lower():
+            return False
+
+        doc = open_pdf(self.config, file.name)
+        if doc is None:
+            return False
+        doc = self.preprocess_doc(doc)
+
+        self.full_content = ""
+        self.content = []
+        self.doc = doc
+        for page in doc:
+            self.content.extend(page.get_text("words"))
+            self.full_content += page.get_text("text")
+
+        if all(map(lambda c: c in self.full_content, self.match_keywords)):
+            self.populate_rows(doc)
+            self.parse_metadata(file)
+            return True
+        else:
+            return False
+
+    def preprocess_doc(self, doc):
+        return doc
+
+    def populate_rows(self, doc):
+        self.rows = []
+        for page in doc:
+            for tbl in page.find_tables(vertical_lines = self.vertical_lines).tables:
+                # TODO: Check vertical offset
+                self.rows.extend(filter(lambda x: not self.is_row_filtered(x), tbl.extract()))
+
+    def is_row_filtered(self, row):
+        if len(row) == 0:
+            return True
+        if self.header_first_cell is not None and self.header_first_cell == row[0]:
+            return True
+        if self.header_first_cell_regex is not None and self.header_first_cell.match(row[0]):
+            return True
+        return False
+
+    def extract_rows(self):
+        rows = []
+        for page in self.doc:
+            for tbl in page.find_tables().tables:
+                # TODO: Check vertical offset
+                rows.extend(
+                    map(
+                        lambda row: [cell.replace("\n", "").strip() for cell in row],
+                        filter(lambda x: not self.is_row_filtered(x), tbl.extract())
+                    )
+                )
+        return rows
