@@ -27,7 +27,11 @@ class Importer(CsvImporter):
             if acc := mapping.get(acc_name):
                 self.account1 = acc
             else:
-                my_warn(f"Account mapping not found for {acc_name}, skipping...", file.name, '')
+                my_warn(
+                    f"Account mapping not found for {acc_name}, skipping...",
+                    file.name,
+                    "",
+                )
                 return False
         else:
             raise ValueError("Account mapping not set in importer config")

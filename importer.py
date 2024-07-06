@@ -170,9 +170,11 @@ class PdfImporter(BaseImporter):
 
         return entries
 
+
 class PdfTableImporter(BaseImporter):
     def __init__(self, config) -> None:
         import re
+
         super().__init__(config)
         self.filetype = "pdf"
         self.vertical_lines: list[int] = None
@@ -211,16 +213,20 @@ class PdfTableImporter(BaseImporter):
     def populate_rows(self, doc):
         self.rows = []
         for page in doc:
-            for tbl in page.find_tables(vertical_lines = self.vertical_lines).tables:
+            for tbl in page.find_tables(vertical_lines=self.vertical_lines).tables:
                 # TODO: Check vertical offset
-                self.rows.extend(filter(lambda x: not self.is_row_filtered(x), tbl.extract()))
+                self.rows.extend(
+                    filter(lambda x: not self.is_row_filtered(x), tbl.extract())
+                )
 
     def is_row_filtered(self, row):
         if len(row) == 0:
             return True
         if self.header_first_cell is not None and self.header_first_cell == row[0]:
             return True
-        if self.header_first_cell_regex is not None and self.header_first_cell.match(row[0]):
+        if self.header_first_cell_regex is not None and self.header_first_cell.match(
+            row[0]
+        ):
             return True
         return False
 
@@ -232,7 +238,7 @@ class PdfTableImporter(BaseImporter):
                 rows.extend(
                     map(
                         lambda row: [cell.replace("\n", "").strip() for cell in row],
-                        filter(lambda x: not self.is_row_filtered(x), tbl.extract())
+                        filter(lambda x: not self.is_row_filtered(x), tbl.extract()),
                     )
                 )
         return rows

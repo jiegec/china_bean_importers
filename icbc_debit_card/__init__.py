@@ -105,6 +105,7 @@ def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
     )
     return txn
 
+
 class Importer(PdfTableImporter):
     def __init__(self, config) -> None:
         super().__init__(config)
