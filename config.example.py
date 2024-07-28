@@ -8,6 +8,7 @@ config = {
         "alipay": {
             "account": "Assets:Alipay",
             "huabei_account": "Liabilities:Alipay:HuaBei",
+            "douyin_monthly_payment_account": "Liabilities:DouyinMonthlyPayment",
             "yuebao_account": "Assets:Alipay:YueBao",
             "red_packet_income_account": "Income:Alipay:RedPacket",
             "red_packet_expense_account": "Expenses:Alipay:RedPacket",
