@@ -108,7 +108,7 @@ class Importer(CsvImporter):
                 # TODO: handle 红包 & 余额宝转入
                 source_config = self.config["importers"]["alipay"]
                 account1 = source_config["account"]  # 支付宝余额
-                if method == "花呗":
+                if "花呗" in method: # Handle discount transactions like "花呗&红包"
                     account1 = source_config["huabei_account"]
                 if method == "余额宝":
                     account1 = source_config["yuebao_account"]
@@ -126,6 +126,11 @@ class Importer(CsvImporter):
                         if not expense
                         else source_config["red_packet_expense_account"]
                     )
+                elif expense and category == "信用借还":
+                    if "还款" in narration and "花呗" in payee:
+                        account2 = source_config["huabei_account"]
+                    elif "抖音月付" in narration:
+                        account2 = source_config["douyin_monthly_payment_account"]
                 else:
                     new_account, new_meta, new_tags = match_destination_and_metadata(
                         self.config, narration, payee
