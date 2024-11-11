@@ -58,6 +58,8 @@ class Importer(importer.ImporterProtocol):
                     parts = content.split("\n")
                     if len(parts) == 4:
                         return parse(parts[1])
+                    elif len(parts) == 3 or len(parts) == 2:
+                        return parse(parts[0])
                     else:
                         break
         elif self.type == "email":
