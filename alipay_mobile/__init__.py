@@ -60,6 +60,11 @@ class Importer(CsvImporter):
                 units = amount.Amount(D(amt), "CNY")
                 metadata["serial"] = serial
 
+                if "自动转入" in narration:  # skip internal transfers
+                    continue
+                if '交易关闭' in status: 
+                    continue
+
                 # fill metadata
                 if payee_account != "":
                     metadata["payee_account"] = payee_account
@@ -83,6 +88,9 @@ class Importer(CsvImporter):
                         expense = False
                     if payee == "余额宝" and "转入" in narration:
                         expense = True
+                    if category == "投资理财" and "转入" in narration:
+                        expense = False
+                        tags.add("investment")  
                     if method == "花呗":
                         if "还款" in narration:
                             expense = True
@@ -150,7 +158,12 @@ class Importer(CsvImporter):
                     my_warn(
                         f"Multiple payment methods found, please confirm", lineno, row
                     )
-                    tags.add("confirmation-needed")
+                    tags.add("multiple-payment-methods") # usually means a discount and needs no special treatment
+                #     metadata["payment_method"] = method  
+                # else:
+                #     metadata["payment_method"] = "支付宝"  
+                
+
 
                 # check status and add warning if needed
                 if "成功" not in status:
