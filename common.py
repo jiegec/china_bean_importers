@@ -36,6 +36,8 @@ class BillDetailMapping(typing.NamedTuple):
     additional_metadata: typing.Optional[dict[str, object]] = None
     # priority (larger means higher priority, 0 means lowest)
     priority: int = 0
+    # match logic ("OR" or "AND")
+    match_logic: str = "OR"
 
     def canonicalize(self):
         tags = set(self.additional_tags) if self.additional_tags else set()
@@ -45,12 +47,18 @@ class BillDetailMapping(typing.NamedTuple):
     def match(
         self, desc: str, payee: str
     ) -> tuple[typing.Optional[str], dict[str, object], set[str], int]:
+        assert self.match_logic == "OR" or self.match_logic == "AND"
+
         # match narration first
+        narration_match = False
         if desc is not None and self.narration_keywords is not None:
             for keyword in self.narration_keywords:
                 if keyword in desc:
-                    return self.canonicalize()
+                    narration_match = True
+                    break
+
         # then try payee
+        payee_match = False
         if payee is not None and self.payee_keywords is not None:
             keywords = (
                 self.narration_keywords
@@ -59,7 +67,13 @@ class BillDetailMapping(typing.NamedTuple):
             )
             for keyword in keywords:
                 if keyword in payee:
-                    return self.canonicalize()
+                    payee_match = True
+                    break
+
+        if self.match_logic == "OR" and (narration_match or payee_match):
+            return self.canonicalize()
+        elif self.match_logic == "AND" and narration_match and payee_match:
+            return self.canonicalize()
         return None, {}, set(), 0
 
 

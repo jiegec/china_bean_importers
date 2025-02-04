@@ -65,6 +65,7 @@ CONFIG = [
   - `destination_account`：在匹配时，对账目使用的目标账户
   - `additional_tags/metadata`：在匹配时，在账目上添加的额外标签和元数据
   - `priority`：默认为 0，值越大则优先级越高
+  - `match_logic`：默认为 `"OR"`，即交易描述或交易对手任意一个匹配即可；可以设置为 `"AND"`，即交易描述和交易对手都需要匹配
 
 ## 可用 Importer
 
