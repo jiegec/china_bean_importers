@@ -8,6 +8,12 @@ from china_bean_importers.importer import PdfImporter
 
 
 def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
+    # HACK: sometimes parts[10] is so long that it is merged into parts[9] due to PDF parsing
+    placeholder = '-------------------'
+    if len(parts) == 11 and parts[9].endswith(placeholder):
+        parts[9] = parts[9].removesuffix(placeholder)
+        parts.insert(10, placeholder)
+
     my_assert(len(parts) == 12, f"Cannot parse line in PDF", lineno, parts)
     # print(parts, file=sys.stderr)
     #    0       1       2    3    4      5      6      7      8       9          10         11
