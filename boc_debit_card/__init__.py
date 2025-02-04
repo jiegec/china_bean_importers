@@ -9,10 +9,11 @@ from china_bean_importers.importer import PdfImporter
 
 def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
     # HACK: sometimes parts[10] is so long that it is merged into parts[9] due to PDF parsing
-    placeholder = '-------------------'
-    if len(parts) == 11 and parts[9].endswith(placeholder):
-        parts[9] = parts[9].removesuffix(placeholder)
-        parts.insert(10, placeholder)
+    # check if parts[9] ends with 19 numeric or '-' characters
+    if len(parts) == 11:
+        if m := re.match(r"^(.*)([\d-]{19})$", parts[9]):
+            parts[9] = m.group(1)
+            parts.insert(10, m.group(2))
 
     my_assert(len(parts) == 12, f"Cannot parse line in PDF", lineno, parts)
     # print(parts, file=sys.stderr)
