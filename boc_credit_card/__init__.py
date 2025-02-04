@@ -71,7 +71,7 @@ class Importer(importer.ImporterProtocol):
 
     def extract_text_entries(self):
         card_num_regex = re.compile(r".*\(卡号(:|：)(\d+)\)")
-        currency_regex = re.compile(r"(\(([a-zA-Z]+)\))?(\w+)交易明细.*")
+        currency_regex = re.compile(r".*(\(([a-zA-Z]+)\))?(\w+)?交易明细.*", flags=re.DOTALL)
 
         # collect text entries from EML / PDF
         # 货币 交易日 银行记账日 卡号后四位 交易描述 存入 支出
@@ -201,7 +201,7 @@ class Importer(importer.ImporterProtocol):
 
         last_account = None
         for lineno, entry in enumerate(self.extract_text_entries()):
-            print(entry, file=sys.stderr)
+            # print(entry, file=sys.stderr)
             # 货币 交易日 银行记账日 卡号后四位 交易描述 存入 支出
             (
                 currency,
