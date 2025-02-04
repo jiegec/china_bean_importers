@@ -64,6 +64,7 @@ CONFIG = [
   - `payee_keywords`：用于匹配交易对手，可以使用 `SAME_AS_NARRATION` 来表示与交易描述使用的关键词一致
   - `destination_account`：在匹配时，对账目使用的目标账户
   - `additional_tags/metadata`：在匹配时，在账目上添加的额外标签和元数据
+  - `priority`：默认为 0，值越大则优先级越高
 
 ## 可用 Importer
 

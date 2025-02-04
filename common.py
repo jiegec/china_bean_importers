@@ -34,15 +34,17 @@ class BillDetailMapping(typing.NamedTuple):
     additional_tags: typing.Optional[list[str]] = None
     # other metadata to append in bill
     additional_metadata: typing.Optional[dict[str, object]] = None
+    # priority (larger means higher priority, 0 means lowest)
+    priority: int = 0
 
     def canonicalize(self):
         tags = set(self.additional_tags) if self.additional_tags else set()
         metadata = self.additional_metadata.copy() if self.additional_metadata else {}
-        return self.destination_account, metadata, tags
+        return self.destination_account, metadata, tags, self.priority
 
     def match(
         self, desc: str, payee: str
-    ) -> tuple[typing.Optional[str], dict[str, object], set[str]]:
+    ) -> tuple[typing.Optional[str], dict[str, object], set[str], int]:
         # match narration first
         if desc is not None and self.narration_keywords is not None:
             for keyword in self.narration_keywords:
@@ -58,7 +60,7 @@ class BillDetailMapping(typing.NamedTuple):
             for keyword in keywords:
                 if keyword in payee:
                     return self.canonicalize()
-        return None, {}, set()
+        return None, {}, set(), 0
 
 
 def match_card_tail(src):
@@ -93,17 +95,18 @@ def find_account_by_card_number(config, card_number):
 def match_destination_and_metadata(config, desc, payee):
     account = None
     mapping = None
+    priority = 0
     metadata = {}
     tags = set()
 
     # merge all possible results
     for m in config["detail_mappings"]:
         _mapping: BillDetailMapping = m
-        new_account, new_metadata, new_tags = _mapping.match(desc, payee)
+        new_account, new_metadata, new_tags, new_priority = _mapping.match(desc, payee)
         # check compatibility
-        if account is None:
-            account, mapping = new_account, m
-        elif new_account is not None:
+        if account is None or new_priority > priority:
+            account, mapping, priority = new_account, m, new_priority
+        elif new_account is not None and new_priority == priority:
             if new_account.startswith(account):
                 # new account is deeper than or equal to current account
                 account, mapping = new_account, m
