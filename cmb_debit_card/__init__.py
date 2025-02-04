@@ -10,6 +10,10 @@ PAYEE_RE = re.compile(r"(\D*)(\d+)")
 
 
 def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
+    # HACK: handle `Customer Type` being a separate row
+    if parts == ['Customer Type']:
+        return None
+
     # Customer Type can be empty
     assert len(parts) == 6 or len(parts) == 7
 
@@ -92,8 +96,8 @@ class Importer(PdfImporter):
         self.column_offsets = [30, 50, 100, 200, 280, 350, 400]
         self.content_start_keyword = "Party"  # "Counter Party"
         self.content_end_regex = re.compile(
-            r"^\d+/\d+$"
-        )  # match page number like "1/5"
+            r"^(\d+/\d+|合并统计)$"
+        )  # match page number like "1/5" or "合并统计"
         self.content_end_keyword = "————"  # match last page
 
     def parse_metadata(self, file):
