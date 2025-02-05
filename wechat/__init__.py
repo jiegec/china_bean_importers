@@ -100,8 +100,9 @@ class Importer(CsvImporter):
                 elif tail := match_card_tail(method):  # cards
                     account1 = find_account_by_card_number(self.config, tail)
                     my_assert(account1, f"Unknown card number {tail}", lineno, row)
+                elif method == "零钱通":
+                    account1 = source_config["lingqiantong_account"]
 
-                # TODO: handle 零钱通 account
                 # TODO: handle 数字人民币 account?
                 my_assert(account1, f"Cannot handle source {method}", lineno, row)
 
