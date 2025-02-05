@@ -90,7 +90,13 @@ class Importer(CsvImporter):
                 # determine source account
                 source_config = self.config["importers"]["wechat"]
                 account1 = None
-                if method == "零钱" or status in [
+                if method == "零钱" and type == "转入零钱通-来自零钱":
+                    # 零钱转入零钱通
+                    account1 = source_config["lingqiantong_account"]
+                elif method == "零钱通" and type == "零钱通转出-到零钱":
+                    # 零钱通转入零钱
+                    account1 = source_config["account"]
+                elif method == "零钱" or status in [
                     "已存入零钱",
                     "已到账",
                     "充值完成",
@@ -100,8 +106,6 @@ class Importer(CsvImporter):
                 elif tail := match_card_tail(method):  # cards
                     account1 = find_account_by_card_number(self.config, tail)
                     my_assert(account1, f"Unknown card number {tail}", lineno, row)
-                elif method == "零钱通":
-                    account1 = source_config["lingqiantong_account"]
 
                 # TODO: handle 数字人民币 account?
                 my_assert(account1, f"Cannot handle source {method}", lineno, row)
@@ -147,8 +151,14 @@ class Importer(CsvImporter):
                     tail = match_card_tail(method)
                     account2 = find_account_by_card_number(self.config, tail)
                     my_assert(account2, f"Unknown card number {tail}", lineno, row)
+                # 7. 零钱通 -> 零钱
+                elif method == "零钱" and type == "转入零钱通-来自零钱":
+                    account2 = source_config["account"]
+                # 8. 零钱 -> 零钱通
+                elif method == "零钱通" and type == "零钱通转出-到零钱":
+                    account2 = source_config["lingqiantong_account"]
 
-                # 6. find by narration and payee
+                # 9. find by narration and payee
                 new_account, new_meta, new_tags = match_destination_and_metadata(
                     self.config, narration, payee
                 )
