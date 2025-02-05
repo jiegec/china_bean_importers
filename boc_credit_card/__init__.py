@@ -172,7 +172,10 @@ class Importer(importer.ImporterProtocol):
                                     None,
                                 )
 
-                        if m := currency_regex.match(text):
+                        if "人民币交易明细" in text:
+                            after_currency = True
+                            currency = "CNY"
+                        elif m := currency_regex.match(text):
                             after_currency = True
                             if m.group(3) == "人民币":
                                 currency = "CNY"
