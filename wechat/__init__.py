@@ -163,12 +163,21 @@ class Importer(CsvImporter):
 
                 # check status
                 if (
-                    status in ["支付成功", "已存入零钱", "已转账", "对方已收钱"]
+                    status
+                    in ["支付成功", "已存入零钱", "已转账", "对方已收钱", "已收钱"]
                     or "已到账" in status
                 ):
                     pass
                 elif "退款" in status:
                     tags.add("refund")
+                elif status in ["提现失败，已退回零钱", "对方已退还"]:
+                    # cancelled
+                    my_warn(
+                        f"Transaction not successful, please confirm: {status}",
+                        lineno,
+                        row,
+                    )
+                    continue
                 else:
                     tags.add("confirmation-needed")
                     my_warn(f"Unhandled tx status: {status}", lineno, row)
