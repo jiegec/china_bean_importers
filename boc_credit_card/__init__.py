@@ -109,43 +109,45 @@ class Importer(importer.ImporterProtocol):
                         ):
                             begin = False
                         elif begin:
-                            # Is it a date line?
+                            # Match date part first
                             # card number can be empty
-                            if re.match(
+                            m = re.match(
                                 r"[0-9]+-[0-9]+-[0-9]+\n[0-9]+-[0-9]+-[0-9]+(\n[0-9]+)?",
                                 content,
                                 re.MULTILINE,
-                            ):
+                            )
+                            if m:
                                 lines = content.split("\n")
                                 trans_date = lines[0]
                                 post_date = lines[1]
                                 description = ""
-                            else:
-                                # Otherwise: Description/Deposit/Expenditure
-                                description += content + "\n"
-                                done = False
-                                if x1 > 500:
-                                    # Expenditure found
-                                    expense = True
-                                    done = True
-                                elif x1 > 400:
-                                    # Deposit found
-                                    expense = False
-                                    done = True
-                                if done:
-                                    desc_lines = description.split("\n")
-                                    orig_narration = "".join(desc_lines[:-2])
-                                    value = desc_lines[-2]
-                                    entry = [
-                                        currency,
-                                        trans_date,
-                                        post_date,
-                                        card_number,
-                                        orig_narration,
-                                        value if not expense else "",
-                                        value if expense else "",
-                                    ]
-                                    text_entries.append(entry)
+                                # After date part matched, continue to match the rest
+                                content = content[m.end() :]
+                            # Otherwise: Description/Deposit/Expenditure
+                            description += content + "\n"
+                            done = False
+                            if x1 > 500:
+                                # Expenditure found
+                                expense = True
+                                done = True
+                            elif x1 > 400:
+                                # Deposit found
+                                expense = False
+                                done = True
+                            if done:
+                                desc_lines = description.split("\n")
+                                orig_narration = "".join(desc_lines[:-2])
+                                value = desc_lines[-2]
+                                entry = [
+                                    currency,
+                                    trans_date,
+                                    post_date,
+                                    card_number,
+                                    orig_narration,
+                                    value if not expense else "",
+                                    value if expense else "",
+                                ]
+                                text_entries.append(entry)
 
         elif self.type == "email":
             for lineno, card in enumerate(self.body.select("div.bill_card_detail")):
