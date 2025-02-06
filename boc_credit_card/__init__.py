@@ -123,7 +123,8 @@ class Importer(importer.ImporterProtocol):
                                 description = ""
                                 # After date part matched, continue to match the rest
                                 content = content[m.end() :]
-                            # Otherwise: Description/Deposit/Expenditure
+
+                            # Description/Deposit/Expenditure
                             description += content + "\n"
                             done = False
                             if x1 > 500:
