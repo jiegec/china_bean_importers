@@ -120,7 +120,7 @@ class Importer(CsvImporter):
                 elif expense and "微信红包" in type:
                     narration = "发微信红包"
                     account2 = source_config["red_packet_expense_account"]
-                    if payee[0:2] == "发给":
+                    if payee is not None and payee[0:2] == "发给":
                         payee = payee[2:]
                 elif not expense and "微信红包-退款" in type:
                     narration = "发微信红包-退款"
