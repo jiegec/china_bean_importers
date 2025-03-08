@@ -96,6 +96,15 @@ class Importer(CsvImporter):
                 elif method == "零钱通" and type == "零钱通转出-到零钱":
                     # 零钱通转入零钱
                     account1 = source_config["account"]
+                elif method == "零钱通" and status.startswith("已退款"):
+                    # 零钱通支付退款
+                    account1 = source_config["lingqiantong_account"]
+                elif method == "零钱通" and status in [
+                    "对方已收钱",
+                    "已转账"
+                ]:
+                    # 零钱通转账
+                    account1 = source_config["lingqiantong_account"]
                 elif method == "零钱通" and type.startswith("零钱通转出-到"):
                     # 零钱通转入卡
                     if tail := match_card_tail(type[len("零钱通转出-到"):]):
