@@ -72,6 +72,8 @@ class Importer(CsvImporter):
                     direction = "支出"
                 if direction == "/" and "零钱" in type:
                     direction = "收入"
+                    if type == "零钱提现":
+                        direction = "支出"
                 if (i := narration.find("付款方留言")) != -1:
                     narration = f"{narration[:i]};{narration[i:]}"
 
