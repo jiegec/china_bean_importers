@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["flit-core==3.12.0"]
+build-backend = "flit_core.buildapi"
 
 [project]
 name = 'china_bean_importers'
@@ -10,33 +10,3 @@ readme = 'README.md'
 license = 'MIT'
 dependencies = ['pymupdf', 'beancount < 3', 'BeautifulSoup4']
 urls.repository = 'https://github.com/jiegec/china_bean_importers'
-
-[tool.setuptools]
-packages = [
-  'china_bean_importers',
-  'china_bean_importers.alipay_mobile',
-  'china_bean_importers.alipay_web',
-  'china_bean_importers.boc_credit_card',
-  'china_bean_importers.boc_debit_card',
-  'china_bean_importers.ccb_debit_card',
-  'china_bean_importers.cmb_debit_card',
-  'china_bean_importers.cmbc_credit_card',
-  'china_bean_importers.cmbc_debit_card',
-  'china_bean_importers.hsbc_hk',
-  'china_bean_importers.thu_ecard_old',
-  'china_bean_importers.wechat',
-]
-
-[tool.setuptools.package-dir]
-'china_bean_importers' = '.'
-'china_bean_importers.alipay_mobile' = './alipay_mobile'
-'china_bean_importers.alipay_web' = './alipay_web'
-'china_bean_importers.boc_credit_card' = './boc_credit_card'
-'china_bean_importers.boc_debit_card' = './boc_debit_card'
-'china_bean_importers.ccb_debit_card' = './ccb_debit_card'
-'china_bean_importers.cmb_debit_card' = './cmb_debit_card'
-'china_bean_importers.cmbc_credit_card' = './cmbc_credit_card'
-'china_bean_importers.cmbc_debit_card' = './cmbc_debit_card'
-'china_bean_importers.hsbc_hk' = './hsbc_hk'
-'china_bean_importers.thu_ecard_old' = './thu_ecard_old'
-'china_bean_importers.wechat' = './wechat'
