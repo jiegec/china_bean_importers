@@ -15,6 +15,13 @@ def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
             parts[9] = m.group(1)
             parts.insert(10, m.group(2))
 
+    # HACK: somtimes parts[8] got merged into parts[8] due to PDF parsing
+    # check if parts[8] becomes so long and duplicates its contents twice
+    if len(parts) == 11:
+        if len(parts[8]) % 2 == 0 and parts[8][:len(parts[8])//2] == parts[8][len(parts[8])//2:]:
+            parts.insert(9, parts[8][len(parts[8])//2:])
+            parts[8] = parts[8][:len(parts[8])//2]
+
     my_assert(len(parts) == 12, f"Cannot parse line in PDF", lineno, parts)
     # print(parts, file=sys.stderr)
     #    0       1       2    3    4      5      6      7      8       9          10         11
