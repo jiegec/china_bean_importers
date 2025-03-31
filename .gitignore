@@ -4,3 +4,5 @@ secret.py
 dist/
 *.egg-info/
 build/
+
+.vscode/
