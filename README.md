@@ -26,17 +26,10 @@ Beancount 导入脚本，支持的数据源包括：
 pip3 install china-bean-importers
 ```
 
-或者克隆本仓库或作为 submodule：
+或者克隆本仓库（放在和 beancount 不同的路径）并安装：
 
 ```shell
 git clone https://github.com/jiegec/china_bean_importers
-# or
-git submodule add git@github.com:jiegec/china_bean_importers.git
-```
-
-然后安装 importer 和依赖：
-
-```shell
 cd china_bean_importers
 pip install --editable .
 ```
