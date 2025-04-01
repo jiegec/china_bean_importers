@@ -2,6 +2,8 @@
 
 [![Test Python package](https://github.com/jiegec/china_bean_importers/actions/workflows/test_package.yml/badge.svg)](https://github.com/jiegec/china_bean_importers/actions/workflows/test_package.yml)
 
+[![PyPI](https://badge.fury.io/py/china-bean-importers.svg)](https://pypi.org/project/china-bean-importers/)
+
 Beancount 导入脚本，支持的数据源包括：
 
 - 微信支付
