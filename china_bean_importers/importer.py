@@ -126,6 +126,8 @@ class PdfImporter(BaseImporter):
 
         for x0, y0, x1, y1, content, block_no, line_no, word_no in self.content:
             content = content.strip()
+            # for debugging
+            # print(x0, y0, content, file=sys.stderr)
 
             if not valid and (
                 (self.content_start_keyword and self.content_start_keyword in content)
