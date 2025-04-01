@@ -4,24 +4,10 @@ from beancount.core.number import D
 import re
 
 from china_bean_importers.common import *
-from china_bean_importers.importer import PdfImporter
+from china_bean_importers.importer import PdfTableImporter
 
 
 def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
-    # HACK: sometimes parts[10] is so long that it is merged into parts[9] due to PDF parsing
-    # check if parts[9] ends with 19 numeric or '-' characters
-    if len(parts) == 11:
-        if m := re.match(r"^(.*)([\d-]{19})$", parts[9]):
-            parts[9] = m.group(1)
-            parts.insert(10, m.group(2))
-
-    # HACK: somtimes parts[8] got merged into parts[8] due to PDF parsing
-    # check if parts[8] becomes so long and duplicates its contents twice
-    if len(parts) == 11:
-        if len(parts[8]) % 2 == 0 and parts[8][:len(parts[8])//2] == parts[8][len(parts[8])//2:]:
-            parts.insert(9, parts[8][len(parts[8])//2:])
-            parts[8] = parts[8][:len(parts[8])//2]
-
     my_assert(len(parts) == 12, f"Cannot parse line in PDF", lineno, parts)
     # print(parts, file=sys.stderr)
     #    0       1       2    3    4      5      6      7      8       9          10         11
@@ -118,27 +104,12 @@ def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
     return txn
 
 
-class Importer(PdfImporter):
+class Importer(PdfTableImporter):
     def __init__(self, config) -> None:
         super().__init__(config)
         self.match_keywords = ["中国银行交易流水明细清单"]
         self.file_account_name = "boc_debit_card"
-        self.column_offsets = [
-            46,
-            112,
-            172,
-            234,
-            300,
-            339,
-            405,
-            445,
-            517,
-            590,
-            660,
-            740,
-        ]
-        self.content_start_keyword = "对方开户行"
-        self.content_end_keyword = "温馨提示"
+        self.header_first_cell = "记账日期"
 
     def parse_metadata(self, file):
         match = re.search(
