@@ -89,6 +89,8 @@ class Importer(CsvImporter):
                         expense = True
                     if narration == "余额宝-转出到余额":
                         expense = False
+                    if narration == "余额宝-单次转入":
+                        expense = True
                     if expense is None:
                         # if '交易关闭' in status or '解冻成功' in status:
                         my_warn(
@@ -122,6 +124,8 @@ class Importer(CsvImporter):
                 if payee == "余额宝" and "自动转入" in narration:
                     account2 = source_config["yuebao_account"]
                 elif method == "余额" and narration == "余额宝-转出到余额":
+                    account2 = source_config["yuebao_account"]
+                elif narration == "余额宝-单次转入":
                     account2 = source_config["yuebao_account"]
                 elif category == "转账红包":
                     account2 = (
