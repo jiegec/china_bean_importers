@@ -83,11 +83,12 @@ class Importer(CsvImporter):
                         expense = False
                     if payee == "余额宝" and "转入" in narration:
                         expense = True
-                    if method == "花呗":
-                        if "还款" in narration:
-                            expense = True
+                    if method == "花呗" and "还款" in narration:
+                        expense = True
                     if payee == "花呗" and "还款" in narration:
                         expense = True
+                    if narration == "余额宝-转出到余额":
+                        expense = False
                     if expense is None:
                         # if '交易关闭' in status or '解冻成功' in status:
                         my_warn(
@@ -110,7 +111,7 @@ class Importer(CsvImporter):
                 account1 = source_config["account"]  # 支付宝余额
                 if "花呗" in method: # Handle discount transactions like "花呗&红包"
                     account1 = source_config["huabei_account"]
-                if method == "余额宝":
+                elif method == "余额宝":
                     account1 = source_config["yuebao_account"]
                 elif tail := match_card_tail(method):
                     account1 = find_account_by_card_number(self.config, tail)
@@ -119,6 +120,8 @@ class Importer(CsvImporter):
                 # find from 商品说明 and 交易对方
                 account2 = None
                 if payee == "余额宝" and "自动转入" in narration:
+                    account2 = source_config["yuebao_account"]
+                elif method == "余额" and narration == "余额宝-转出到余额":
                     account2 = source_config["yuebao_account"]
                 elif category == "转账红包":
                     account2 = (
