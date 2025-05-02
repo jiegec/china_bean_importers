@@ -145,7 +145,7 @@ Importer 可自动识别上述两种格式。
 
 下载邮件附件，解压 ZIP 文件，得到 PDF。
 
-### 民生银行信用卡（`cmbc_crebit_card`）
+### 民生银行信用卡（`cmbc_credit_card`）
 
 Importer 支持以下两种格式：
 
