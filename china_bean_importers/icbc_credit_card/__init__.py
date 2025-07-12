@@ -162,14 +162,11 @@ class Importer(importer.ImporterProtocol):
         [dst_number, dst_currency] = dst_amount.split("/")
 
         metadata = data.new_metadata(file_name, lineno)
-        txn_units = None
         if C_TXN in txn_object:
             original_amount = txn_object[C_TXN]
             [txn_number, txn_currency] = original_amount.split("/")
             if dst_currency != txn_currency:
                 metadata["original_amount"] = f"{txn_number} {txn_currency}"
-                # TODO: It can fill per-unit price (@) but usually people may want total price (@@)
-                txn_units = amount.Amount(D(txn_number), txn_currency)
 
         date = parse(txn_object[C_DATE]).date()
 
@@ -207,7 +204,7 @@ class Importer(importer.ImporterProtocol):
                     account=account1,
                     units=units,
                     cost=None,
-                    price=txn_units,
+                    price=None,
                     flag=None,
                     meta=None,
                 ),
