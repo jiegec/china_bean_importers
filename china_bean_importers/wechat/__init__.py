@@ -5,10 +5,10 @@ import csv
 import re
 
 from china_bean_importers.common import *
-from china_bean_importers.importer import CsvImporter
+from china_bean_importers.importer import CsvOrXlsxImporter
 
 
-class Importer(CsvImporter):
+class Importer(CsvOrXlsxImporter):
     def __init__(self, config) -> None:
         super().__init__(config)
         self.match_keywords = ["微信支付账单明细"]

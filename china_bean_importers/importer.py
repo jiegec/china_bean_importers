@@ -79,6 +79,45 @@ class CsvImporter(BaseImporter):
         except BaseException:
             return False
 
+class CsvOrXlsxImporter(BaseImporter):
+    def __init__(self, config) -> None:
+        super().__init__(config)
+        self.encoding: str = "utf-8"
+        self.filetype = "csv"
+
+    def identify(self, file):
+        if self.match_keywords is None:
+            raise "match_keywords not set"
+        try:
+            if file.name.endswith(".xlsx"):
+                try:
+                    import pandas as pd
+                    import openpyxl
+                except ImportError:
+                    print(f"WARNING: missing pandas or openpyxl, cannot parse xlsx\n", file=sys.stderr)
+                    return False
+
+                df = pd.read_excel(file.name)
+                csv = df.to_csv(index=False)
+                self.filetype = "xlsx"
+                self.full_content = csv
+            elif file.name.endswith(".csv"):
+                with open(file.name, "r", encoding=self.encoding) as f:
+                    self.full_content = f.read()
+            else:
+                return False
+            self.content = []
+            for ln in self.full_content.splitlines():
+                if (l := ln.strip()) != "":
+                    self.content.append(l)
+            if all(
+                map(lambda c: c in self.full_content, self.match_keywords)
+            ):
+                self.parse_metadata(file)
+                return True
+        except BaseException:
+            return False
+
 
 class PdfImporter(BaseImporter):
     def __init__(self, config) -> None:
