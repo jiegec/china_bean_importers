@@ -17,11 +17,16 @@ class Importer(importer.ImporterProtocol):
     def identify(self, file):
         if file.name.upper().endswith(".PDF"):
             self.type = "pdf"
-            if "中国银行信用卡" in file.name:
-                import fitz
 
+            import fitz
+            if "中国银行信用卡" in file.name:
                 self.doc = fitz.open(file.name)
                 return True
+            elif "中国银行" in file.name:
+                doc = fitz.open(file.name)
+                if "信用卡账单" in doc[0].get_text():
+                    self.doc = doc
+                    return True
             return False
         elif file.name.upper().endswith(".EML"):
             self.type = "email"
