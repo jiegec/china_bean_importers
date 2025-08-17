@@ -39,6 +39,9 @@ def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
         if units1 < amount.Amount(D(0), currency_code):
             print(f"Expense skipped", file=sys.stderr)
             return None
+        elif "退款" in parts[5]:
+            print(f"Refund skipped", file=sys.stderr)
+            return None
         else:
             print(f"Income kept in record", file=sys.stderr)
 
