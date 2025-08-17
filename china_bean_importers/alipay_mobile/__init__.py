@@ -59,6 +59,7 @@ class Importer(CsvImporter):
                 time = parse(time)
                 units = amount.Amount(D(amt), "CNY")
                 metadata["serial"] = serial
+                metadata["status"] = status
 
                 # fill metadata
                 if payee_account != "":
