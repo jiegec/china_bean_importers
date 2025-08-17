@@ -13,6 +13,27 @@ class Importer(importer.ImporterProtocol):
     def __init__(self, config) -> None:
         super().__init__()
         self.config = config
+        self.rate = None
+
+    def get_config(self, cfg, account, narration):
+        if "importers" not in self.config:
+            return None
+        if "boc" not in self.config["importers"]:
+            return None
+        if "credit" not in self.config["importers"]["boc"]:
+            return None
+        if cfg not in self.config["importers"]["boc"]["credit"]:
+            return None
+
+        if callable(self.config["importers"]["boc"]["credit"][cfg]):
+            return self.config["importers"]["boc"]["credit"][cfg](account, narration)
+        return self.config["importers"]["boc"]["credit"][cfg]
+
+    def repayment_tag(self, account, narration) -> str:
+        return self.get_config("repayment_tag", account, narration)
+
+    def extract_repayment_rate(self, account, narration) -> bool:
+        return self.get_config("extract_repayment_rate", account, narration)
 
     def identify(self, file):
         if file.name.upper().endswith(".PDF"):
@@ -81,6 +102,7 @@ class Importer(importer.ImporterProtocol):
         # collect text entries from EML / PDF
         # 货币 交易日 银行记账日 卡号后四位 交易描述 存入 支出
         text_entries = []
+        ref_rate = None
 
         if self.type == "pdf":
             card_number = None
@@ -97,6 +119,16 @@ class Importer(importer.ImporterProtocol):
                         continue
                     if re.match(r"(第 [0-9]+ 页/共)|([0-9]+ 页)", content):
                         continue
+
+                    if m := re.match(r"参考汇率: *([0-9.]+)", content):
+                        rate = float(m.group(1))
+                        if rate == 0:
+                            rate = None
+                        elif rate > 100:
+                            rate = rate / 100
+
+                        if rate is not None:
+                            self.rate = rate
 
                     if "人民币交易明细" in content:
                         currency = "CNY"
@@ -282,6 +314,20 @@ class Importer(importer.ImporterProtocol):
             if account2 is None:
                 account2 = unknown_account(self.config, expense)
 
+            price = None
+            if "还款成功" in narration:
+                if t := self.repayment_tag(account1, narration):
+                    tags.add(t)
+
+                rate = self.rate
+                if m := re.search(r"汇率([0-9.]+)", narration):
+                    rate = float(m.group(1))
+
+                if currency != "CNY" and rate is not None and self.extract_repayment_rate(account1, narration):
+                    price = amount.Amount(D(rate), "CNY")
+
+
+            # backward compat
             if "授权批准" in narration:  # 还款
                 tags.add("maybe-repayment")
             # Assume transfer from the first debit card?
@@ -304,7 +350,7 @@ class Importer(importer.ImporterProtocol):
                         account=account1,
                         units=units,
                         cost=None,
-                        price=None,
+                        price=price,
                         flag=None,
                         meta=None,
                     ),
