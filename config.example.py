@@ -37,6 +37,12 @@ config = {
             },
             "use_cnh": False,
         },
+        "boc": {
+            "credit": {
+                "extract_repayment_rate": False, # Boolean, or predicate function (account, narration) -> bool
+                "repayment_tag": None, # String, or function (account, narration) -> str
+            },
+        },
         "card_narration_whitelist": ["财付通(银联云闪付)"],
         "card_narration_blacklist": ["支付宝", "财付通", "美团支付"],
     },
