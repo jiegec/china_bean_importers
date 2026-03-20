@@ -38,7 +38,7 @@ class Importer(CsvOrXlsxImporter):
 
                 # parse some basic info
                 time = parse(row[0])
-                units = amount.Amount(D(row[5][1:]), "CNY")
+                units = amount.Amount(D(row[5].removeprefix("¥")), "CNY")
                 (
                     _,
                     type,
