@@ -16,9 +16,7 @@ Beancount 导入脚本，支持的数据源包括：
 - 清华大学校园卡（新、旧）
 - 汇丰香港信用卡、储蓄账户
 
-**说明：本项目尚不支持 Beancount 3 或更新的版本。**
-
-## 使用方法
+## 安装
 
 使用 pypi 安装：
 
@@ -43,7 +41,11 @@ pip install --editable .
 
 运行 `cp config.example.py config.py` 复制配置模板，编辑 `config.py` 填入你的配置，**放置在你的项目目录中**。
 
-最后，在 beancount 使用的导入脚本中按需加入：
+## 使用方法
+
+### Beancount 2
+
+在 beancount 使用的导入脚本中按需加入：
 
 ```python
 from china_bean_importers import wechat, alipay_web, alipay_mobile, boc_credit_card, boc_debit_card, cmb_debit_card
@@ -58,6 +60,48 @@ CONFIG = [
     boc_debit_card.Importer(config),
     cmb_debit_card.Importer(config),
 ]
+```
+
+### Beancount 3 (beangulp)
+
+在项目目录中创建 `import.py`：
+
+```python
+import beangulp
+import sys
+import os
+from china_bean_importers.beangulp import (
+    wechat,
+    alipay_web,
+    alipay_mobile,
+    boc_credit_card,
+    boc_debit_card,
+    cmb_debit_card,
+)
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
+
+from china_bean_importer_config import config
+
+
+importers = [
+    wechat.Importer(config),
+    alipay_web.Importer(config),
+    alipay_mobile.Importer(config),
+    boc_credit_card.Importer(config),
+    boc_debit_card.Importer(config),
+    cmb_debit_card.Importer(config),
+]
+
+if __name__ == "__main__":
+    ingest = beangulp.Ingest(importers, [])
+    ingest()
+```
+
+然后运行：
+
+```shell
+python3 import.py extract -o imported.beancount documents
 ```
 
 ## Importer 配置
