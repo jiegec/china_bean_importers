@@ -50,6 +50,8 @@ pip install --editable .
 ```python
 from china_bean_importers import wechat, alipay_web, alipay_mobile, boc_credit_card, boc_debit_card, cmb_debit_card
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
+
 from china_bean_importer_config import config # your config file name
 
 CONFIG = [

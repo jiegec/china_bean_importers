@@ -4,10 +4,10 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "china_bean_importers"
-version = "0.0.6"
+version = "0.0.7"
 requires-python = ">=3.9,<4"
 description = "Beancount importers for Chinese users"
 readme = "README.md"
 license = "MIT"
-dependencies = ["pymupdf", "beancount < 3", "BeautifulSoup4"]
+dependencies = ["pymupdf", "beancount", "BeautifulSoup4"]
 urls.repository = "https://github.com/jiegec/china_bean_importers"
