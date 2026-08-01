@@ -42,7 +42,7 @@ class Importer(CsvImporter):
                 begin = True
             elif begin:
                 # parse data line
-                metadata: dict = data.new_metadata(file.name, lineno)
+                metadata: dict = data.new_metadata(filepath, lineno)
                 tags = set()
 
                 # parse some basic info
