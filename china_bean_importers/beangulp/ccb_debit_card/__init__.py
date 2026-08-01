@@ -61,6 +61,8 @@ class Importer(CsvImporter):
 
                 if cash == "人民币元":
                     cash = "CNY"
+                elif cash == "美元":
+                    cash = "USD"
                 else:
                     raise Exception("Unknown currency!")
 
