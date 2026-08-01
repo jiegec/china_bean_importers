@@ -9,7 +9,7 @@ from china_bean_importers.beangulp.importer import PdfImporter
 PAYEE_RE = re.compile(r"(\D*)(\d+)")
 
 
-def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
+def gen_txn(config, filepath, parts, lineno, flag, card_acc, real_name):
     # HACK: handle `Customer Type` being a separate row
     if parts == ['Customer Type']:
         return None
