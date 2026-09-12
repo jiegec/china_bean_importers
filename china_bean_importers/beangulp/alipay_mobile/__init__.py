@@ -92,7 +92,7 @@ class Importer(CsvImporter):
                         expense = False
                     if narration == "余额宝-单次转入":
                         expense = True
-                    if method.startswith("支付宝小荷包(") and method.endswith(")"):
+                    if method.startswith("支付宝小荷包(") and method.endswith(")") and expense is None:
                         expense = True
                     if expense is None:
                         # if '交易关闭' in status or '解冻成功' in status:
