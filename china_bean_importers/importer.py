@@ -223,6 +223,9 @@ class PdfImporter(BaseImporter):
                         curr_col = i
                 if curr_col > last_col:
                     # new column in existing row
+                    for i in range(curr_col - last_col - 1):
+                        # handle empty columns
+                        parts.append("")
                     parts.append(content)
                 elif curr_col == last_col:
                     # same column in existing row

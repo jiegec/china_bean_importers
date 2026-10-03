@@ -6,40 +6,30 @@ import re
 from china_bean_importers.common import *
 from china_bean_importers.importer import PdfImporter
 
-PAYEE_RE = re.compile(r"(\D*)(\d+)")
-
 
 def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
-    # HACK: handle `Customer Type` being a separate row
-    if parts[-1] == 'Customer Type':
-        return None
+    if len(parts) != 9:
+        return
 
-    # Customer Type can be empty
-    assert len(parts) == 6 or len(parts) == 7
-
-    # parts[5]: 对手信息
-    payee = parts[5]
-    # parts[4]: 交易摘要
+    # parts[1]: 对方户名
+    payee = parts[1]
+    # parts[2]: 对方账号
+    payee_account = parts[2]
+    # parts[4]: 摘要
     narration = parts[4]
-    if len(parts) == 7:
-        # parts[6]: 客户摘要
-        narration += " " + parts[6]
+    # parts[5]: 备注
+    if parts[5]:
+        narration += " " + parts[5]
     # parts[0]: 记账日期
     date = parse(parts[0]).date()
-    # parts[2]: 金额
-    units1 = amount.Amount(D(parts[2]), "CNY")
-    # parts[3]: 余额
-    balance = amount.Amount(D(parts[3]), "CNY")
+    # parts[7]: 金额
+    units1 = data.Amount(D(parts[7]), "CNY")
+    # parts[8]: 余额
+    balance = data.Amount(D(parts[8]), "CNY")
 
     metadata = data.new_metadata(file.name, lineno)
     metadata["balance"] = str(balance)
     tags = set()
-
-    payee_account = None
-    if m := PAYEE_RE.match(payee):
-        payee, payee_account = m.groups()
-    if payee_account:
-        metadata["payee_account"] = payee_account
 
     if m := match_destination_and_metadata(config, narration, payee):
         (account2, new_meta, new_tags) = m
@@ -49,11 +39,13 @@ def gen_txn(config, file, parts, lineno, flag, card_acc, real_name):
         account2 = unknown_account(config, True)
 
     # Handle transfer to credit/debit cards
-    # parts[5]: 对手信息
     if payee.startswith(real_name) and payee_account:
         new_account = find_account_by_card_number(config, payee_account)
         if new_account is not None:
             account2 = new_account
+
+    # Append card number
+    payee += " " + payee_account
 
     txn = data.Transaction(
         meta=metadata,
@@ -90,31 +82,25 @@ class Importer(PdfImporter):
         import re
 
         super().__init__(config)
-        self.match_keywords = ["招商银行交易流水"]
-        self.file_account_name = "cmbc_debit_card"
-        self.content_start_keyword = "Party"  # "Counter Party"
+        self.match_keywords = ["微众银行"]
+        self.file_account_name = "webank_debit_card"
+        self.column_offsets = [30, 80, 140, 220, 280, 340, 380, 460, 520]
+        self.content_start_keyword = "Counterparty"  # "Counterparty"
         self.content_end_regex = re.compile(
-            r"^(\d+/\d+|合并统计)$"
-        )  # match page number like "1/5" or "合并统计"
+            r"^(打印时间)$"
+        )
         self.content_end_keyword = "————"  # match last page
 
     def parse_metadata(self, file):
-        match = re.search(r"名：(\w+)", self.full_content)
+        match = re.search(r"Account Name：\n(\w+)", self.full_content)
         assert match
         self.real_name = match[1]
 
-        match = re.search(r"[0-9]{16}", self.full_content)
+        match = re.search(r"Account/Card No.：([0-9]{19})", self.full_content)
         assert match
-        card_number = match[0]
+        card_number = match[1]
         self.card_acc = find_account_by_card_number(self.config, card_number[-4:])
         my_assert(self.card_acc, f"Unknown card number {card_number}", 0, 0)
-
-        if "Customer Type" not in self.full_content and "客户摘要" not in self.full_content:
-            # 6 columns: Date, Currency, Transaction Amount, Balance, Transaction Type
-            self.column_offsets = [30, 50, 100, 200, 280, 350]
-        else:
-            # 7 columns: Date, Currency, Transaction Amount, Balance, Transaction Type, Counter Party, Customer Type
-            self.column_offsets = [30, 50, 100, 200, 280, 350, 400]
 
     def generate_tx(self, row, lineno, file):
         return gen_txn(

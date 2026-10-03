@@ -12,6 +12,7 @@ from china_bean_importers.beangulp import (
     icbc_debit_card,
     hsbc_hk,
     thu_ecard_old,
+    webank_debit_card,
     wechat,
 )
 
@@ -29,5 +30,6 @@ __all__ = [
     "icbc_debit_card",
     "hsbc_hk",
     "thu_ecard_old",
+    "webank_debit_card",
     "wechat",
 ]
